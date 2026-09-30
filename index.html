@@ -65,6 +65,36 @@
       font-size: 16px;
       pointer-events: none;
     }
+
+    /* ---------- Tab Navigation ---------- */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px 0;
+      background: #0a0a0a;
+      border-bottom: 1px solid #1a1a2a;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      font-family: inherit;
+    }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.active {
+      color: #e94560;
+      border-bottom-color: #e94560;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     .stats {
       padding: 12px 24px;
       color: #888;
@@ -154,6 +184,82 @@
       text-overflow: ellipsis;
       max-width: 90%;
     }
+
+    /* ---------- Telegram Section ---------- */
+    .telegram-section {
+      padding: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .telegram-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, #16162a 0%, #1a1a30 100%);
+      border-radius: 14px;
+      border: 1px solid #2a2a3a;
+    }
+    .telegram-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0088cc, #00aaff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .telegram-header .tg-info { display: flex; flex-direction: column; }
+    .telegram-header .tg-title { font-size: 16px; font-weight: 600; }
+    .telegram-header .tg-sub { font-size: 13px; color: #888; margin-top: 2px; }
+    .telegram-header .tg-open {
+      margin-left: auto;
+      padding: 10px 18px;
+      background: #0088cc;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .telegram-header .tg-open:hover {
+      background: #00aaff;
+      transform: translateY(-1px);
+    }
+    .telegram-iframe-wrap {
+      background: #12121e;
+      border-radius: 14px;
+      border: 1px solid #2a2a3a;
+      overflow: hidden;
+      min-height: 600px;
+      position: relative;
+    }
+    .telegram-iframe-wrap iframe {
+      width: 100%;
+      height: 700px;
+      border: none;
+      display: block;
+      background: #12121e;
+    }
+    .tg-note {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: rgba(233, 69, 96, 0.08);
+      border: 1px solid rgba(233, 69, 96, 0.25);
+      border-radius: 10px;
+      font-size: 12.5px;
+      color: #b0b0b0;
+      line-height: 1.6;
+    }
+    .tg-note strong { color: #e94560; }
 
     /* Player */
     .player-wrap {
@@ -250,10 +356,16 @@
       header { padding: 14px 16px; }
       .logo-title { font-size: 20px; }
       .search-box { max-width: 100%; }
+      .tabs { padding: 10px 16px 0; }
+      .tab-btn { padding: 8px 14px; font-size: 13px; }
       .grid { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
       .channel { min-height: 120px; padding: 12px 8px; }
       .channel img, .channel .fallback-logo { width: 56px; height: 56px; }
       .player-info { bottom: 80px; left: 12px; }
+      .telegram-section { padding: 16px; }
+      .telegram-header { flex-wrap: wrap; }
+      .telegram-header .tg-open { margin-left: 0; width: 100%; text-align: center; }
+      .telegram-iframe-wrap iframe { height: 500px; }
     }
   </style>
 </head>
@@ -261,14 +373,60 @@
 
   <header>
     <div class="logo-title">📺 My <span>TV</span></div>
-    <div class="search-box">
+    <div class="search-box" id="searchBoxWrap">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Search channels...">
     </div>
   </header>
-  <div class="stats" id="stats">Loading channels...</div>
-  <div id="channels" class="grid"></div>
 
+  <!-- Tab Navigation -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="channels">📡 Channels</button>
+    <button class="tab-btn" data-tab="telegram">✈️ Telegram</button>
+  </div>
+
+  <!-- ================= CHANNELS TAB ================= -->
+  <div id="tab-channels" class="tab-content active">
+    <div class="stats" id="stats">Loading channels...</div>
+    <div id="channels" class="grid"></div>
+  </div>
+
+  <!-- ================= TELEGRAM TAB ================= -->
+  <div id="tab-telegram" class="tab-content">
+    <div class="telegram-section">
+
+      <div class="telegram-header">
+        <div class="telegram-icon">✈️</div>
+        <div class="tg-info">
+          <span class="tg-title" id="tgChannelTitle">NETSAFE_ZONE</span>
+          <span class="tg-sub">Live feed from a public Telegram channel</span>
+        </div>
+        <a class="tg-open" id="tgOpenLink" href="https://t.me/Net_safe_zone" target="_blank" rel="noopener">
+          Open in Telegram ↗
+        </a>
+      </div>
+
+      <div class="telegram-iframe-wrap">
+        <iframe
+          id="telegramIframe"
+          src="https://t.me/s/Net_safe_zone"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
+        </iframe>
+      </div>
+
+      <div class="tg-note">
+        <strong>Note:</strong> If the feed above appears blank, the channel may be private, or your
+        browser/site security policy (CSP) is blocking the iframe. In that case, use the
+        <strong>"Open in Telegram"</strong> button above. You can also try a widget service like
+        Elfsight if direct embedding doesn't work.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= PLAYER ================= -->
   <div id="playerWrap" class="player-wrap">
     <video id="player" controls playsinline></video>
     <div class="player-overlay">
@@ -294,6 +452,18 @@
   <script>
     const PLAYLIST_URL = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
 
+    /* ============================================================
+       ⚙️ TELEGRAM CHANNEL CONFIGURATION
+       Channel: https://t.me/Net_safe_zone
+    ============================================================ */
+    const TELEGRAM_CHANNEL_USERNAME = 'Net_safe_zone';
+    const TELEGRAM_CHANNEL_TITLE    = 'NETSAFE_ZONE';
+
+    // Apply the config to the iframe + header automatically
+    document.getElementById('telegramIframe').src = 'https://t.me/s/' + TELEGRAM_CHANNEL_USERNAME;
+    document.getElementById('tgOpenLink').href    = 'https://t.me/' + TELEGRAM_CHANNEL_USERNAME;
+    document.getElementById('tgChannelTitle').textContent = TELEGRAM_CHANNEL_TITLE;
+
     const LOGO_SOURCES = [
       'https://live.fanmingming.cn/tv/',
       'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/',
@@ -303,6 +473,7 @@
     const channelsEl  = document.getElementById('channels');
     const statsEl     = document.getElementById('stats');
     const searchInput = document.getElementById('searchInput');
+    const searchBoxWrap = document.getElementById('searchBoxWrap');
     const playerWrap  = document.getElementById('playerWrap');
     const video       = document.getElementById('player');
     const closeBtn    = document.getElementById('closeBtn');
@@ -314,6 +485,26 @@
     let hls = null;
     let dashPlayer = null;
     let shakaPlayer = null;
+
+    /* ---------- Tab switching ---------- */
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = {
+      channels: document.getElementById('tab-channels'),
+      telegram: document.getElementById('tab-telegram')
+    };
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+
+        tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+        Object.values(tabContents).forEach(c => c.classList.remove('active'));
+        tabContents[target].classList.add('active');
+
+        // Hide the channel search bar when not on the channels tab
+        searchBoxWrap.style.display = (target === 'channels') ? '' : 'none';
+      });
+    });
 
     /* ---------- Load & parse playlist ---------- */
     async function loadPlaylist() {
@@ -476,7 +667,6 @@
 
     /* ---------- Parse DRM parameters from M3U URL ---------- */
     function parseDrmParams(url) {
-      // Example: .../cenc.mpd|drmScheme=clearkey&drmLicense=a863...:34ea...
       const result = { manifestUrl: url, drmScheme: null, clearKeys: null };
 
       if (!url.includes('|')) return result;
@@ -484,14 +674,13 @@
       const parts = url.split('|');
       result.manifestUrl = parts[0];
 
-      const queryString = parts.slice(1).join('|'); // in case URL has multiple pipes
+      const queryString = parts.slice(1).join('|');
       const params = new URLSearchParams(queryString);
 
       const drmScheme = params.get('drmScheme');
       const drmLicense = params.get('drmLicense');
 
       if (drmScheme === 'clearkey' && drmLicense) {
-        // drmLicense format: "kid:key"
         const [kid, key] = drmLicense.split(':');
         if (kid && key) {
           result.drmScheme = 'clearkey';
@@ -521,10 +710,8 @@
       const url = ch.url;
       const parsed = parseDrmParams(url);
 
-      // ---- MPEG-DASH with ClearKey DRM (.mpd) ----
       if (parsed.manifestUrl.includes('.mpd')) {
         if (parsed.drmScheme === 'clearkey' && parsed.clearKeys) {
-          // Primary: dash.js with protection data
           try {
             dashPlayer = dashjs.MediaPlayer().create();
             dashPlayer.initialize(video, parsed.manifestUrl, false);
@@ -538,7 +725,6 @@
             dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
             dashPlayer.on(dashjs.MediaPlayer.events.ERROR, (e) => {
               console.error('dash.js error:', e);
-              // Fallback: try Shaka Player if dash.js fails
               playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
             });
           } catch (e) {
@@ -546,7 +732,6 @@
             playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
           }
         } else {
-          // Plain DASH without DRM
           try {
             dashPlayer = dashjs.MediaPlayer().create();
             dashPlayer.initialize(video, parsed.manifestUrl, false);
@@ -558,7 +743,6 @@
         return;
       }
 
-      // ---- HLS (.m3u8) ----
       if (parsed.manifestUrl.includes('.m3u8') && window.Hls && Hls.isSupported()) {
         hls = new Hls();
         hls.loadSource(parsed.manifestUrl);
@@ -568,13 +752,12 @@
         return;
       }
 
-      // ---- Fallback: direct video src ----
       video.src = parsed.manifestUrl;
       video.addEventListener('loadedmetadata', startPlay, { once: true });
       video.load();
     }
 
-    /* ---------- Shaka Player fallback for DASH ClearKey ---------- */
+    /* ---------- Shaka Player fallback ---------- */
     async function playWithShaka(manifestUrl, clearKeys, onReady) {
       try {
         shaka.polyfill.installAll();
@@ -584,9 +767,7 @@
         }
         shakaPlayer = new shaka.Player(video);
         shakaPlayer.configure({
-          drm: {
-            clearKeys: clearKeys
-          }
+          drm: { clearKeys: clearKeys }
         });
         shakaPlayer.addEventListener('error', (event) => {
           console.error('Shaka error:', event.detail);
