@@ -3,429 +3,214 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
   <title>My TV</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #000;
+      --surface: #0e0e0e;
+      --surface-2: #151515;
+      --outline: #262626;
+      --on-surface: #e6e1e5;
+      --on-variant: #938f99;
+      --primary: #d0bcff;
+      --on-primary: #381e72;
+      --r-md: 16px; --r-lg: 24px; --r-full: 999px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { color-scheme: dark; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: #0a0a0a;
-      color: #fff;
+      font-family: Roboto, 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--on-surface);
       min-height: 100vh;
-    }
-    header {
-      padding: 20px 24px;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-bottom: 1px solid #2a2a3a;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .logo-title span { color: #e94560; }
-    .search-box {
-      position: relative;
-      flex: 1;
-      max-width: 400px;
-      min-width: 200px;
-    }
-    .search-box input {
-      width: 100%;
-      padding: 12px 16px 12px 44px;
-      border-radius: 12px;
-      border: 1px solid #2a2a3a;
-      background: #12121e;
-      color: #fff;
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .search-box input:focus {
-      border-color: #e94560;
-      box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.15);
-    }
-    .search-box input::placeholder { color: #666; }
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #666;
-      font-size: 16px;
-      pointer-events: none;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* ---------- Tab Navigation ---------- */
+    /* ---------- Top bar ---------- */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .logo-title { font-size: 20px; font-weight: 500; letter-spacing: .2px; white-space: nowrap; }
+    .logo-title span { color: var(--primary); }
+    .search-box { position: relative; flex: 1; max-width: 420px; margin-left: auto; }
+    .search-box input {
+      width: 100%; height: 48px;
+      padding: 0 16px 0 48px;
+      border-radius: var(--r-full);
+      border: none; outline: none;
+      background: var(--surface-2);
+      color: var(--on-surface);
+      font-size: 15px; font-family: inherit;
+      transition: background .2s, box-shadow .2s;
+    }
+    .search-box input:focus { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--primary); }
+    .search-box input::placeholder { color: var(--on-variant); }
+    .search-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--on-variant); font-size: 16px; pointer-events: none;
+    }
+
+    /* ---------- Tabs ---------- */
     .tabs {
-      display: flex;
-      gap: 8px;
-      padding: 12px 24px 0;
-      background: #0a0a0a;
-      border-bottom: 1px solid #1a1a2a;
+      display: flex; padding: 0 12px;
+      border-bottom: 1px solid var(--outline);
+      position: sticky; top: 72px; z-index: 90; background: var(--bg);
     }
     .tab-btn {
-      padding: 10px 20px;
-      background: transparent;
-      border: none;
-      color: #888;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.2s, border-color 0.2s;
-      font-family: inherit;
+      flex: 1; max-width: 220px; height: 48px;
+      background: transparent; border: none;
+      color: var(--on-variant);
+      font-size: 14px; font-weight: 500; font-family: inherit; letter-spacing: .1px;
+      cursor: pointer; position: relative;
+      transition: color .2s;
     }
-    .tab-btn:hover { color: #ccc; }
-    .tab-btn.active {
-      color: #e94560;
-      border-bottom-color: #e94560;
+    .tab-btn::after {
+      content: ''; position: absolute; left: 20%; right: 20%; bottom: 0; height: 3px;
+      border-radius: 3px 3px 0 0; background: var(--primary);
+      transform: scaleX(0); transition: transform .2s;
     }
-
+    .tab-btn:hover { color: var(--on-surface); }
+    .tab-btn.active { color: var(--primary); }
+    .tab-btn.active::after { transform: scaleX(1); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .stats {
-      padding: 12px 24px;
-      color: #888;
-      font-size: 13px;
-      border-bottom: 1px solid #1a1a2a;
-    }
+    .stats { padding: 14px 20px 0; color: var(--on-variant); font-size: 13px; }
+
+    /* ---------- Channel grid ---------- */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 16px;
-      padding: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px; padding: 16px 20px 32px;
     }
     .channel {
-      background: linear-gradient(145deg, #16162a 0%, #1a1a30 100%);
-      border-radius: 14px;
-      padding: 16px 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
-      border: 1px solid #2a2a3a;
-      text-align: center;
-      min-height: 140px;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
+      background: var(--surface);
+      border-radius: var(--r-lg);
+      padding: 18px 10px 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      min-height: 136px; text-align: center; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: background .15s, transform .1s;
     }
-    .channel::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(233,69,96,0.08) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .channel:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      border-color: #e94560;
-    }
-    .channel:hover::before { opacity: 1; }
+    .channel:hover { background: var(--surface-2); }
+    .channel:active { transform: scale(.97); background: #1d1d1d; }
     .channel img {
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.04);
-      padding: 6px;
-      transition: transform 0.2s;
+      width: 64px; height: 64px; object-fit: contain;
+      border-radius: var(--r-md); background: rgba(255,255,255,.05); padding: 6px;
     }
-    .channel:hover img { transform: scale(1.08); }
     .channel .fallback-logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 700;
-      color: #e94560;
-      text-transform: uppercase;
-      flex-shrink: 0;
+      width: 64px; height: 64px; border-radius: var(--r-md);
+      background: var(--surface-2); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 500; text-transform: uppercase; flex-shrink: 0;
     }
     .channel .ch-name {
-      font-size: 13px;
-      font-weight: 500;
-      line-height: 1.35;
-      word-break: break-word;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      max-width: 100%;
+      font-size: 13px; font-weight: 500; line-height: 1.3; word-break: break-word;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; max-width: 100%;
     }
     .channel .group-tag {
-      font-size: 10px;
-      color: #666;
-      background: rgba(255,255,255,0.05);
-      padding: 2px 8px;
-      border-radius: 20px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 90%;
+      font-size: 11px; color: var(--on-variant);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92%;
     }
 
-    /* ---------- Live Cricket Section ---------- */
-    .cricket-section {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
+    /* ---------- Cricket tab ---------- */
+    .cricket-section { padding: 20px; max-width: 760px; margin: 0 auto; }
     .cricket-box {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
-      border: 2px solid #2a2a3a;
-      border-radius: 20px;
-      padding: 40px 32px;
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
+      display: block; text-decoration: none; color: inherit;
+      background: var(--surface); border-radius: 28px;
+      padding: 36px 24px; text-align: center;
     }
-    .cricket-box::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(233,69,96,0.1) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .cricket-box:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      border-color: #e94560;
-    }
-    .cricket-box:hover::before { opacity: 1; }
-
-    .cricket-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      display: block;
-      position: relative;
-      z-index: 1;
-    }
-    .cricket-title {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      position: relative;
-      z-index: 1;
-    }
-    .cricket-title span { color: #e94560; }
-    .cricket-subtitle {
-      font-size: 15px;
-      color: #aaa;
-      margin-bottom: 24px;
-      position: relative;
-      z-index: 1;
-      line-height: 1.6;
-    }
+    .cricket-icon { font-size: 52px; margin-bottom: 12px; display: block; }
+    .cricket-title { font-size: 24px; font-weight: 500; margin-bottom: 10px; }
+    .cricket-title span { color: var(--primary); }
+    .cricket-subtitle { font-size: 14px; color: var(--on-variant); margin-bottom: 22px; line-height: 1.6; }
     .cricket-cta {
-      display: inline-block;
-      padding: 14px 32px;
-      background: #e94560;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 12px;
-      text-decoration: none;
-      transition: background 0.2s, transform 0.15s;
-      position: relative;
-      z-index: 1;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
+      display: inline-flex; align-items: center; height: 48px; padding: 0 28px;
+      background: var(--primary); color: var(--on-primary);
+      font-size: 14px; font-weight: 500; border-radius: var(--r-full);
+      transition: filter .15s, transform .1s;
     }
-    .cricket-box:hover .cricket-cta {
-      background: #ff5a75;
-      transform: scale(1.03);
-    }
-
+    .cricket-box:hover .cricket-cta { filter: brightness(1.08); }
+    .cricket-box:active .cricket-cta { transform: scale(.97); }
     .cricket-apps {
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid #2a2a3a;
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      text-align: left;
+      margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left;
     }
-    .cricket-app-group {
-      background: rgba(255,255,255,0.03);
-      border-radius: 12px;
-      padding: 16px;
-      border: 1px solid #2a2a3a;
-    }
+    .cricket-app-group { background: var(--surface-2); border-radius: var(--r-md); padding: 16px; }
     .cricket-app-group h4 {
-      font-size: 13px;
-      font-weight: 600;
-      color: #e94560;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 12px; font-weight: 500; color: var(--primary);
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: .6px;
     }
-    .cricket-app-group p {
-      font-size: 13px;
-      color: #bbb;
-      line-height: 1.7;
+    .cricket-app-group p, .cricket-app-group .app-list li {
+      font-size: 13px; color: var(--on-variant); line-height: 1.7;
     }
+    .cricket-app-group strong { color: var(--on-surface); font-weight: 500; }
     .cricket-app-group code {
-      background: rgba(233,69,96,0.15);
-      color: #ff8a9e;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-family: monospace;
+      background: rgba(208,188,255,.12); color: var(--primary);
+      padding: 1px 6px; border-radius: 6px; font-size: 12px; font-family: monospace;
     }
-    .cricket-app-group .app-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .cricket-app-group .app-list li {
-      font-size: 13px;
-      color: #bbb;
-      padding: 3px 0;
-      padding-left: 16px;
-      position: relative;
-    }
-    .cricket-app-group .app-list li::before {
-      content: '•';
-      position: absolute;
-      left: 0;
-      color: #e94560;
-      font-weight: bold;
-    }
+    .cricket-app-group .app-list { list-style: none; margin-top: 4px; }
+    .cricket-app-group .app-list li { padding: 2px 0; }
 
-    /* Player */
-    .player-wrap {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      display: none;
-      z-index: 9999;
-    }
+    /* ---------- Player ---------- */
+    .player-wrap { position: fixed; inset: 0; background: #000; display: none; z-index: 9999; }
     .player-wrap.active { display: block; }
-    .player-wrap video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #000;
-    }
-    .player-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-    .player-wrap:hover .player-overlay { opacity: 1; }
-    .close-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      z-index: 10000;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(10px);
-      border: none;
-      color: white;
-      font-size: 22px;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s, transform 0.15s;
-    }
-    .close-btn:hover {
-      background: rgba(233, 69, 96, 0.8);
-      transform: scale(1.05);
-    }
-    
-    .player-info {
-      position: absolute;
-      bottom: 60px;
-      left: 24px;
-      right: auto;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(8px);
-      border-radius: 12px;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .player-wrap:hover .player-info { opacity: 1; }
-    
-    .player-info img {
-      width: 40px;
-      height: 40px;
-      object-fit: contain;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.1);
-      padding: 4px;
-    }
-    .player-info .info-text { display: flex; flex-direction: column; }
-    .player-info .info-name { font-size: 15px; font-weight: 600; }
-    .player-info .info-group { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .player-wrap video { width: 100%; height: 100%; object-fit: contain; background: #000; }
 
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 80px 20px;
-      color: #666;
+    .spinner {
+      position: absolute; top: 50%; left: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px;
+      border-radius: 50%; border: 4px solid rgba(255,255,255,.15); border-top-color: var(--primary);
+      animation: spin .8s linear infinite; pointer-events: none; display: none; z-index: 5;
     }
-    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .player-wrap.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .player-top {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+      padding: calc(12px + env(safe-area-inset-top)) 16px 32px;
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(to bottom, rgba(0,0,0,.75), transparent);
+      opacity: 0; transition: opacity .25s; pointer-events: none;
+    }
+    .player-wrap.show-ui .player-top { opacity: 1; pointer-events: auto; }
+    .player-top img {
+      width: 40px; height: 40px; object-fit: contain; border-radius: 10px;
+      background: rgba(255,255,255,.08); padding: 4px;
+    }
+    .info-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+    .info-name { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .info-group { font-size: 12px; color: var(--on-variant); margin-top: 2px; }
+    .live-dot { color: #ff5252; font-size: 12px; font-weight: 500; letter-spacing: .6px; }
+    .close-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,.12); color: #fff; font-size: 18px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: background .2s, transform .1s;
+    }
+    .close-btn:hover { background: rgba(255,255,255,.22); }
+    .close-btn:active { transform: scale(.92); }
+
+    .empty-state { grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--on-variant); }
+    .empty-state .icon { font-size: 44px; margin-bottom: 14px; }
 
     @media (max-width: 600px) {
-      header { padding: 14px 16px; }
-      .logo-title { font-size: 20px; }
-      .search-box { max-width: 100%; }
-      .tabs { padding: 10px 16px 0; }
-      .tab-btn { padding: 8px 14px; font-size: 13px; }
-      .grid { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-      .channel { min-height: 120px; padding: 12px 8px; }
-      .channel img, .channel .fallback-logo { width: 56px; height: 56px; }
-      .player-info { bottom: 80px; left: 12px; }
-      .cricket-section { padding: 16px; }
-      .cricket-box { padding: 28px 20px; }
-      .cricket-title { font-size: 22px; }
+      header { padding: 10px 14px; gap: 10px; }
+      .logo-title { font-size: 18px; }
+      .tabs { top: 68px; padding: 0 4px; }
+      .tab-btn { max-width: none; }
+      .grid { padding: 12px 14px 28px; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+      .channel { min-height: 116px; padding: 14px 6px 12px; border-radius: 20px; }
+      .channel img, .channel .fallback-logo { width: 52px; height: 52px; }
+      .channel .ch-name { font-size: 12px; }
+      .cricket-section { padding: 14px; }
+      .cricket-box { padding: 28px 18px; }
+      .cricket-title { font-size: 20px; }
       .cricket-apps { grid-template-columns: 1fr; }
     }
   </style>
@@ -433,7 +218,7 @@
 <body>
 
   <header>
-    <div class="logo-title">📺 My <span>TV</span></div>
+    <div class="logo-title">My <span>TV</span></div>
     <div class="search-box" id="searchBoxWrap">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Search channels...">
@@ -442,8 +227,8 @@
 
   <!-- Tab Navigation -->
   <div class="tabs">
-    <button class="tab-btn active" data-tab="channels">📡 Channels</button>
-    <button class="tab-btn" data-tab="cricket">🏏 Live Cricket</button>
+    <button class="tab-btn active" data-tab="channels">Channels</button>
+    <button class="tab-btn" data-tab="cricket">Live Cricket</button>
   </div>
 
   <!-- ================= CHANNELS TAB ================= -->
@@ -499,16 +284,14 @@
   <!-- ================= PLAYER ================= -->
   <div id="playerWrap" class="player-wrap">
     <video id="player" controls playsinline></video>
-    <div class="player-overlay">
-      <span style="font-size:15px; font-weight:600;">Now Playing</span>
-    </div>
-    <button id="closeBtn" class="close-btn">✕</button>
-    <div class="player-info" id="playerInfo">
+    <div class="spinner"></div>
+    <div class="player-top" id="playerInfo">
       <img id="nowPlayingLogo" src="" alt="" onerror="this.style.display='none'">
       <div class="info-text">
         <span class="info-name" id="nowPlayingName"></span>
-        <span class="info-group" id="nowPlayingGroup"></span>
+        <span class="info-group"><span class="live-dot">● LIVE</span> <span id="nowPlayingGroup"></span></span>
       </div>
+      <button id="closeBtn" class="close-btn" aria-label="Close">✕</button>
     </div>
   </div>
 
@@ -543,6 +326,8 @@
     let hls = null;
     let dashPlayer = null;
     let shakaPlayer = null;
+    let session = 0;          // increments per channel; stale callbacks are ignored
+    let stallTimer = null;
 
     /* ---------- Tab switching ---------- */
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -715,6 +500,8 @@
 
     /* ---------- Cleanup players before starting a new one ---------- */
     function destroyPlayers() {
+      session++;
+      clearInterval(stallTimer); stallTimer = null;
       if (hls) { hls.destroy(); hls = null; }
       if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
       if (shakaPlayer) { shakaPlayer.destroy(); shakaPlayer = null; }
@@ -758,9 +545,14 @@
       nowPlayingName.textContent  = ch.name;
       nowPlayingGroup.textContent = ch.group || '';
 
-      playerWrap.classList.add('active');
+      playerWrap.classList.add('active', 'loading');
+      showUI();
 
+      const mySession = session;
+      let started = false;
       const startPlay = () => {
+        if (started || mySession !== session) return;   // fullscreen/play only once per channel
+        started = true;
         video.play().catch(e => console.log('Play error:', e));
         requestFullscreen(playerWrap);
       };
@@ -802,17 +594,92 @@
       }
 
       if (parsed.manifestUrl.includes('.m3u8') && window.Hls && Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(parsed.manifestUrl);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, startPlay);
-        hls.on(Hls.Events.ERROR, (event, data) => console.error('HLS error:', data));
+        playHls(parsed.manifestUrl, startPlay, mySession);
         return;
       }
 
       video.src = parsed.manifestUrl;
       video.addEventListener('loadedmetadata', startPlay, { once: true });
       video.load();
+    }
+
+    /* ---------- HLS with live tuning + auto recovery ---------- */
+    function playHls(url, startPlay, mySession) {
+      let netRetries = 0, mediaRetries = 0, fullReloads = 0;
+
+      const create = () => {
+        if (hls) { hls.destroy(); hls = null; }
+        hls = new Hls({
+          lowLatencyMode: false,
+          liveSyncDurationCount: 4,          // sit 4 segments behind live edge (safer buffer)
+          liveMaxLatencyDurationCount: 12,   // only jump forward if >12 segments behind
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+          backBufferLength: 20,              // free old data so memory never bloats
+          maxBufferHole: 0.6,
+          nudgeMaxRetry: 10,
+          manifestLoadingMaxRetry: 6,
+          levelLoadingMaxRetry: 6,
+          fragLoadingMaxRetry: 6,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingRetryDelay: 1000,
+          fragLoadingRetryDelay: 1000,
+          fragLoadingMaxRetryTimeout: 8000
+        });
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, startPlay);
+
+        // a successful fragment = stream is healthy, reset retry counters
+        hls.on(Hls.Events.FRAG_BUFFERED, () => { netRetries = 0; mediaRetries = 0; fullReloads = 0; });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (mySession !== session) return;
+          if (!data.fatal) return;                       // hls.js handles non-fatal itself
+          console.warn('HLS fatal:', data.type, data.details);
+
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && netRetries < 5) {
+            netRetries++;
+            setTimeout(() => { if (hls && mySession === session) hls.startLoad(); }, 1000 * netRetries);
+          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRetries < 3) {
+            mediaRetries++;
+            if (mediaRetries === 2) hls.swapAudioCodec();
+            hls.recoverMediaError();
+          } else if (fullReloads < 5) {
+            fullReloads++;                               // rebuild the player from scratch
+            netRetries = mediaRetries = 0;
+            setTimeout(() => { if (mySession === session) create(); }, 1500);
+          } else {
+            console.error('HLS gave up');
+          }
+        });
+      };
+      create();
+      startStallWatchdog(mySession, () => create());
+    }
+
+    /* ---------- Stall watchdog: fixes "stuck loading" on live streams ---------- */
+    function startStallWatchdog(mySession, rebuild) {
+      clearInterval(stallTimer);
+      let lastTime = -1, stuckFor = 0;
+      stallTimer = setInterval(() => {
+        if (mySession !== session) return;
+        if (video.paused || video.ended) { stuckFor = 0; return; }
+        if (Math.abs(video.currentTime - lastTime) < 0.05) {
+          stuckFor += 2;
+          if (stuckFor === 6 && hls && hls.liveSyncPosition) {
+            video.currentTime = hls.liveSyncPosition;    // 1st try: jump to live edge
+          } else if (stuckFor === 10 && hls) {
+            hls.recoverMediaError();                     // 2nd try: reset decoder
+          } else if (stuckFor >= 16) {
+            stuckFor = 0;                                // 3rd try: rebuild everything
+            rebuild();
+          }
+        } else {
+          stuckFor = 0;
+        }
+        lastTime = video.currentTime;
+      }, 2000);
     }
 
     /* ---------- Shaka Player fallback ---------- */
@@ -847,8 +714,9 @@
     function closePlayer() {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      playerWrap.classList.remove('active');
+      playerWrap.classList.remove('active', 'loading', 'show-ui');
       destroyPlayers();
+      playerWrap.classList.remove('loading');
     }
 
     closeBtn.onclick = closePlayer;
@@ -865,8 +733,29 @@
       }
     });
 
+    /* ---------- Player UI: tap to show/hide, buffering spinner ---------- */
+    let uiTimer = null;
+    function showUI() {
+      playerWrap.classList.add('show-ui');
+      clearTimeout(uiTimer);
+      uiTimer = setTimeout(() => playerWrap.classList.remove('show-ui'), 3500);
+    }
+    ['mousemove', 'touchstart', 'click', 'keydown'].forEach(ev =>
+      playerWrap.addEventListener(ev, showUI, { passive: true }));
+    ['waiting', 'stalled', 'seeking', 'loadstart'].forEach(ev =>
+      video.addEventListener(ev, () => playerWrap.classList.add('loading')));
+    ['playing', 'canplay', 'seeked'].forEach(ev =>
+      video.addEventListener(ev, () => playerWrap.classList.remove('loading')));
+
     /* ---------- Init ---------- */
     loadPlaylist();
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
