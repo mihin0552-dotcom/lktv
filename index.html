@@ -370,11 +370,22 @@
     </div>
   </div>
 
-  <!-- Shaka Player (Handles HLS, DASH, and ClearKey DRM natively) -->
+  <!-- Shaka Player -->
   <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
   <script>
-    const PLAYLIST_URL = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
+    // ==========================================
+    // CONFIGURATION
+    // ==========================================
+    
+    // Your Cloudflare Worker Proxy URL
+    const PROXY_URL = 'https://playerprox.miinbandara.workers.dev/';
+    
+    // The original playlist URL
+    const ORIGINAL_PLAYLIST = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
+    
+    // Route the playlist through the proxy
+    const PLAYLIST_URL = PROXY_URL + '?url=' + encodeURIComponent(ORIGINAL_PLAYLIST);
 
     const LOGO_SOURCES = [
       'https://live.fanmingming.cn/tv/',
@@ -382,6 +393,9 @@
       'https://raw.githubusercontent.com/Fourqui/tv/master/countries/international/',
     ];
 
+    // ==========================================
+    // DOM ELEMENTS
+    // ==========================================
     const channelsEl  = document.getElementById('channels');
     const statsEl     = document.getElementById('stats');
     const searchInput = document.getElementById('searchInput');
@@ -400,7 +414,9 @@
     let allChannels = [];
     let shakaPlayer = null;
 
-    /* ---------- Initialize Shaka Player ---------- */
+    // ==========================================
+    // SHAKA PLAYER INIT
+    // ==========================================
     async function initShaka() {
       shaka.polyfill.installAll();
       
@@ -412,19 +428,13 @@
       shakaPlayer = new shaka.Player();
       await shakaPlayer.attach(video);
 
-      // Add Request Filter to spoof headers (fixes 400 Bad Request on aiv-cdn.net)
-      shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
-        request.headers['Referer'] = 'https://www.primevideo.com/';
-        request.headers['Origin'] = 'https://www.primevideo.com';
-      });
-
       // Global Error Listener
       shakaPlayer.addEventListener('error', (event) => {
         const error = event.detail;
         console.error('Shaka Error:', error);
         let msg = 'Playback failed. ';
         if (error.code === 1001) msg += 'The stream may be offline or blocked.';
-        else if (error.code === 1002) msg += 'Network error (CORS or 400 Bad Request).';
+        else if (error.code === 1002) msg += 'Network error (CORS or 400 Bad Request). Check your proxy settings.';
         else if (error.code === 3016) msg += 'DRM Key error. Check your ClearKey values.';
         else msg += `Error Code: ${error.code}`;
         
@@ -432,7 +442,9 @@
       });
     }
 
-    /* ---------- Load & Parse M3U Playlist ---------- */
+    // ==========================================
+    // PLAYLIST LOADING
+    // ==========================================
     async function loadPlaylist() {
       try {
         const res = await fetch(PLAYLIST_URL);
@@ -446,7 +458,7 @@
           <div class="empty-state">
             <div class="icon">⚠️</div>
             <p>Failed to load playlist: ${e.message}</p>
-            <p style="margin-top:8px;font-size:13px;">Check CORS or use a proxy worker.</p>
+            <p style="margin-top:8px;font-size:13px;">Check if your Cloudflare Worker is online.</p>
           </div>`;
         statsEl.textContent = 'Error loading playlist';
       }
@@ -484,7 +496,9 @@
       return channels;
     }
 
-    /* ---------- Logo Resolution ---------- */
+    // ==========================================
+    // LOGO RESOLUTION
+    // ==========================================
     function getLogoUrl(channel) {
       if (channel.logo && channel.logo.startsWith('http')) return channel.logo;
 
@@ -519,7 +533,9 @@
       };
     }
 
-    /* ---------- Render Channels ---------- */
+    // ==========================================
+    // RENDER CHANNELS
+    // ==========================================
     function renderChannels(channels) {
       if (!channels.length) {
         channelsEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No channels found.</p></div>`;
@@ -562,7 +578,9 @@
       channelsEl.appendChild(fragment);
     }
 
-    /* ---------- Search ---------- */
+    // ==========================================
+    // SEARCH
+    // ==========================================
     searchInput.addEventListener('input', () => {
       const q = searchInput.value.trim().toLowerCase();
       const cards = channelsEl.querySelectorAll('.channel');
@@ -577,7 +595,9 @@
         : `${allChannels.length} channels loaded`;
     });
 
-    /* ---------- DRM Parameter Parsing ---------- */
+    // ==========================================
+    // DRM PARSING
+    // ==========================================
     function parseDrmParams(url) {
       let manifestUrl = url;
       let clearKeys = null;
@@ -608,7 +628,9 @@
       return { manifestUrl, clearKeys };
     }
 
-    /* ---------- Play Channel ---------- */
+    // ==========================================
+    // PLAY CHANNEL (With Proxy Integration)
+    // ==========================================
     async function playChannel(ch) {
       if (!shakaPlayer) {
         showError('Shaka Player is not initialized yet.');
@@ -625,9 +647,13 @@
       nowPlayingName.textContent  = ch.name;
       nowPlayingGroup.textContent = ch.group || '';
 
+      // 1. Parse the original URL to get the clean MPD link and ClearKeys
       const parsed = parseDrmParams(ch.url);
 
-      // Configure Shaka Player with ClearKey if present
+      // 2. Wrap the CLEAN manifest URL with your Cloudflare Worker proxy
+      const proxiedUrl = PROXY_URL + '?url=' + encodeURIComponent(parsed.manifestUrl);
+
+      // 3. Configure Shaka Player with ClearKey if present
       if (parsed.clearKeys) {
         shakaPlayer.configure({
           drm: {
@@ -635,12 +661,12 @@
           }
         });
       } else {
-        // Clear any previous DRM config
         shakaPlayer.configure({ drm: { clearKeys: {} } });
       }
 
+      // 4. Load the proxied URL
       try {
-        await shakaPlayer.load(parsed.manifestUrl);
+        await shakaPlayer.load(proxiedUrl);
         video.play().catch(e => console.log('Autoplay blocked:', e));
         requestFullscreen(playerWrap);
       } catch (e) {
@@ -660,7 +686,9 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    /* ---------- Close Player ---------- */
+    // ==========================================
+    // CLOSE PLAYER
+    // ==========================================
     function closePlayer() {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -690,7 +718,9 @@
       }
     });
 
-    /* ---------- Custom URL Playback ---------- */
+    // ==========================================
+    // CUSTOM URL PLAYBACK
+    // ==========================================
     function playCustomUrl() {
       const url = customUrlInput.value.trim();
       if (!url) {
@@ -713,7 +743,9 @@
       if (e.key === 'Enter') playCustomUrl();
     });
 
-    /* ---------- Init ---------- */
+    // ==========================================
+    // INIT
+    // ==========================================
     initShaka().then(() => {
       loadPlaylist();
     });
