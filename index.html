@@ -65,6 +65,49 @@
       font-size: 16px;
       pointer-events: none;
     }
+
+    /* Custom URL Play Box */
+    .custom-url-box {
+      display: flex;
+      gap: 10px;
+      padding: 12px 24px;
+      background: #0f0f1a;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    .custom-url-box input {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid #2a2a3a;
+      background: #12121e;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .custom-url-box input:focus {
+      border-color: #e94560;
+    }
+    .custom-url-box input::placeholder { color: #666; }
+    .custom-url-box button {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      background: #e94560;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .custom-url-box button:hover {
+      background: #d63850;
+    }
+    .custom-url-box button:active {
+      transform: scale(0.97);
+    }
+
     .stats {
       padding: 12px 24px;
       color: #888;
@@ -207,10 +250,9 @@
       transform: scale(1.05);
     }
     
-    /* UPDATED: Now playing overlay shifted up to avoid native controls */
     .player-info {
       position: absolute;
-      bottom: 60px; /* Shifted up from 0 */
+      bottom: 60px;
       left: 24px;
       right: auto;
       background: rgba(0, 0, 0, 0.6);
@@ -251,10 +293,12 @@
       header { padding: 14px 16px; }
       .logo-title { font-size: 20px; }
       .search-box { max-width: 100%; }
+      .custom-url-box { flex-direction: column; padding: 12px 16px; }
+      .custom-url-box button { width: 100%; padding: 12px; }
       .grid { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
       .channel { min-height: 120px; padding: 12px 8px; }
       .channel img, .channel .fallback-logo { width: 56px; height: 56px; }
-      .player-info { bottom: 80px; left: 12px; } /* Shifted further up for mobile controls */
+      .player-info { bottom: 80px; left: 12px; }
     }
   </style>
 </head>
@@ -267,6 +311,13 @@
       <input type="text" id="searchInput" placeholder="Search channels...">
     </div>
   </header>
+
+  <!-- NEW: Custom URL Input Box -->
+  <div class="custom-url-box">
+    <input type="text" id="customUrlInput" placeholder="Paste MPD / M3U8 / Stream URL here... (e.g. https://.../cenc.mpd|drmScheme=clearkey&drmLicense=keyid:key)">
+    <button id="playCustomBtn">▶ Play Custom URL</button>
+  </div>
+
   <div class="stats" id="stats">Loading channels...</div>
   <div id="channels" class="grid"></div>
 
@@ -285,15 +336,20 @@
     </div>
   </div>
 
+  <!-- HLS.js for .m3u8 streams -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  <!-- dash.js for .mpd streams with DRM -->
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+  <!-- Shaka Player as a robust fallback for DASH/DRM -->
+  <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+
   <script>
     const PLAYLIST_URL = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
 
-    // Logo API base URLs — multiple sources for best coverage
     const LOGO_SOURCES = [
-      'https://live.fanmingming.cn/tv/',           // fanmingming — huge coverage
-      'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/', // tv-logos
-      'https://raw.githubusercontent.com/Fourqui/tv/master/countries/international/',    // Fourqui
+      'https://live.fanmingming.cn/tv/',
+      'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/',
+      'https://raw.githubusercontent.com/Fourqui/tv/master/countries/international/',
     ];
 
     const channelsEl  = document.getElementById('channels');
@@ -305,9 +361,15 @@
     const nowPlayingLogo  = document.getElementById('nowPlayingLogo');
     const nowPlayingName  = document.getElementById('nowPlayingName');
     const nowPlayingGroup = document.getElementById('nowPlayingGroup');
+    
+    // Custom URL elements
+    const customUrlInput = document.getElementById('customUrlInput');
+    const playCustomBtn  = document.getElementById('playCustomBtn');
 
     let allChannels = [];
     let hls = null;
+    let dashPlayer = null;
+    let shakaPlayer = null;
 
     /* ---------- Load & parse playlist ---------- */
     async function loadPlaylist() {
@@ -458,12 +520,46 @@
         : `${allChannels.length} channels loaded`;
     });
 
-    /* ---------- Play channel ---------- */
-    function playChannel(ch) {
+    /* ---------- Cleanup players before starting a new one ---------- */
+    function destroyPlayers() {
       if (hls) { hls.destroy(); hls = null; }
+      if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
+      if (shakaPlayer) { shakaPlayer.destroy(); shakaPlayer = null; }
       video.pause();
       video.removeAttribute('src');
       video.load();
+    }
+
+    /* ---------- Parse DRM parameters from M3U URL ---------- */
+    function parseDrmParams(url) {
+      // Example: .../cenc.mpd|drmScheme=clearkey&drmLicense=a863...:34ea...
+      const result = { manifestUrl: url, drmScheme: null, clearKeys: null };
+
+      if (!url.includes('|')) return result;
+
+      const parts = url.split('|');
+      result.manifestUrl = parts[0];
+
+      const queryString = parts.slice(1).join('|'); // in case URL has multiple pipes
+      const params = new URLSearchParams(queryString);
+
+      const drmScheme = params.get('drmScheme');
+      const drmLicense = params.get('drmLicense');
+
+      if (drmScheme === 'clearkey' && drmLicense) {
+        // drmLicense format: "kid:key"
+        const [kid, key] = drmLicense.split(':');
+        if (kid && key) {
+          result.drmScheme = 'clearkey';
+          result.clearKeys = { [kid.trim()]: key.trim() };
+        }
+      }
+      return result;
+    }
+
+    /* ---------- Play channel ---------- */
+    function playChannel(ch) {
+      destroyPlayers();
 
       const logoUrl = getLogoUrl(ch);
       nowPlayingLogo.src = logoUrl || '';
@@ -478,18 +574,83 @@
         requestFullscreen(playerWrap);
       };
 
-      if (ch.url.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+      const url = ch.url;
+      const parsed = parseDrmParams(url);
+
+      // ---- MPEG-DASH with ClearKey DRM (.mpd) ----
+      if (parsed.manifestUrl.includes('.mpd')) {
+        if (parsed.drmScheme === 'clearkey' && parsed.clearKeys) {
+          // Primary: dash.js with protection data
+          try {
+            dashPlayer = dashjs.MediaPlayer().create();
+            dashPlayer.initialize(video, parsed.manifestUrl, false);
+
+            const protData = {
+              "org.w3.clearkey": {
+                "clearkeys": parsed.clearKeys
+              }
+            };
+            dashPlayer.setProtectionData(protData);
+            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
+            dashPlayer.on(dashjs.MediaPlayer.events.ERROR, (e) => {
+              console.error('dash.js error:', e);
+              // Fallback: try Shaka Player if dash.js fails
+              playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
+            });
+          } catch (e) {
+            console.error('dash.js init failed, trying Shaka:', e);
+            playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
+          }
+        } else {
+          // Plain DASH without DRM
+          try {
+            dashPlayer = dashjs.MediaPlayer().create();
+            dashPlayer.initialize(video, parsed.manifestUrl, false);
+            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
+          } catch (e) {
+            console.error('DASH playback failed:', e);
+          }
+        }
+        return;
+      }
+
+      // ---- HLS (.m3u8) ----
+      if (parsed.manifestUrl.includes('.m3u8') && window.Hls && Hls.isSupported()) {
         hls = new Hls();
-        hls.loadSource(ch.url);
+        hls.loadSource(parsed.manifestUrl);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, startPlay);
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error('HLS error:', data);
+        hls.on(Hls.Events.ERROR, (event, data) => console.error('HLS error:', data));
+        return;
+      }
+
+      // ---- Fallback: direct video src ----
+      video.src = parsed.manifestUrl;
+      video.addEventListener('loadedmetadata', startPlay, { once: true });
+      video.load();
+    }
+
+    /* ---------- Shaka Player fallback for DASH ClearKey ---------- */
+    async function playWithShaka(manifestUrl, clearKeys, onReady) {
+      try {
+        shaka.polyfill.installAll();
+        if (!shaka.Player.isBrowserSupported()) {
+          console.warn('Shaka Player not supported in this browser');
+          return;
+        }
+        shakaPlayer = new shaka.Player(video);
+        shakaPlayer.configure({
+          drm: {
+            clearKeys: clearKeys
+          }
         });
-      } else {
-        video.src = ch.url;
-        video.addEventListener('loadedmetadata', startPlay, { once: true });
-        video.load();
+        shakaPlayer.addEventListener('error', (event) => {
+          console.error('Shaka error:', event.detail);
+        });
+        await shakaPlayer.load(manifestUrl);
+        onReady();
+      } catch (e) {
+        console.error('Shaka playback failed:', e);
       }
     }
 
@@ -504,8 +665,7 @@
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       playerWrap.classList.remove('active');
-      video.pause();
-      if (hls) { hls.destroy(); hls = null; }
+      destroyPlayers();
     }
 
     closeBtn.onclick = closePlayer;
@@ -519,6 +679,34 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && playerWrap.classList.contains('active')) {
         closePlayer();
+      }
+    });
+
+    /* ---------- Custom URL Playback ---------- */
+    function playCustomUrl() {
+      const url = customUrlInput.value.trim();
+      if (!url) {
+        alert('Please paste a stream URL first.');
+        return;
+      }
+      
+      // Create a fake channel object to reuse the existing playChannel logic
+      const customChannel = {
+        name: 'Custom Stream',
+        url: url,
+        group: 'Custom',
+        logo: ''
+      };
+      
+      playChannel(customChannel);
+    }
+
+    playCustomBtn.onclick = playCustomUrl;
+    
+    // Allow pressing "Enter" in the input to start playback
+    customUrlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        playCustomUrl();
       }
     });
 
