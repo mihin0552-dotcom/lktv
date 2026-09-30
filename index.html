@@ -281,6 +281,31 @@
     .player-info .info-name { font-size: 15px; font-weight: 600; }
     .player-info .info-group { font-size: 12px; color: #aaa; margin-top: 2px; }
 
+    /* Error Overlay */
+    .player-error {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      z-index: 10001;
+    }
+    .player-error h2 { color: #e94560; margin-bottom: 12px; font-size: 24px; }
+    .player-error p { color: #ccc; max-width: 500px; margin-bottom: 20px; line-height: 1.5; }
+    .player-error button {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      background: #e94560;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
@@ -312,7 +337,7 @@
     </div>
   </header>
 
-  <!-- NEW: Custom URL Input Box -->
+  <!-- Custom URL Input Box -->
   <div class="custom-url-box">
     <input type="text" id="customUrlInput" placeholder="Paste MPD / M3U8 / Stream URL here... (e.g. https://.../cenc.mpd|drmScheme=clearkey&drmLicense=keyid:key)">
     <button id="playCustomBtn">▶ Play Custom URL</button>
@@ -322,11 +347,14 @@
   <div id="channels" class="grid"></div>
 
   <div id="playerWrap" class="player-wrap">
-    <video id="player" controls playsinline></video>
+    <video id="video" controls playsinline></video>
+    
     <div class="player-overlay">
       <span style="font-size:15px; font-weight:600;">Now Playing</span>
     </div>
+    
     <button id="closeBtn" class="close-btn">✕</button>
+    
     <div class="player-info" id="playerInfo">
       <img id="nowPlayingLogo" src="" alt="" onerror="this.style.display='none'">
       <div class="info-text">
@@ -334,13 +362,15 @@
         <span class="info-group" id="nowPlayingGroup"></span>
       </div>
     </div>
+
+    <div class="player-error" id="playerError">
+      <h2>Playback Error</h2>
+      <p id="errorMessage">Could not load the stream. The CDN may be blocking the request or the link is invalid.</p>
+      <button onclick="closePlayer()">Close Player</button>
+    </div>
   </div>
 
-  <!-- HLS.js for .m3u8 streams -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-  <!-- dash.js for .mpd streams with DRM -->
-  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-  <!-- Shaka Player as a robust fallback for DASH/DRM -->
+  <!-- Shaka Player (Handles HLS, DASH, and ClearKey DRM natively) -->
   <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
   <script>
@@ -356,22 +386,53 @@
     const statsEl     = document.getElementById('stats');
     const searchInput = document.getElementById('searchInput');
     const playerWrap  = document.getElementById('playerWrap');
-    const video       = document.getElementById('player');
+    const video       = document.getElementById('video');
     const closeBtn    = document.getElementById('closeBtn');
     const nowPlayingLogo  = document.getElementById('nowPlayingLogo');
     const nowPlayingName  = document.getElementById('nowPlayingName');
     const nowPlayingGroup = document.getElementById('nowPlayingGroup');
+    const playerError     = document.getElementById('playerError');
+    const errorMessage    = document.getElementById('errorMessage');
     
-    // Custom URL elements
     const customUrlInput = document.getElementById('customUrlInput');
     const playCustomBtn  = document.getElementById('playCustomBtn');
 
     let allChannels = [];
-    let hls = null;
-    let dashPlayer = null;
     let shakaPlayer = null;
 
-    /* ---------- Load & parse playlist ---------- */
+    /* ---------- Initialize Shaka Player ---------- */
+    async function initShaka() {
+      shaka.polyfill.installAll();
+      
+      if (!shaka.Player.isBrowserSupported()) {
+        console.error('Shaka Player is not supported in this browser.');
+        return;
+      }
+
+      shakaPlayer = new shaka.Player();
+      await shakaPlayer.attach(video);
+
+      // Add Request Filter to spoof headers (fixes 400 Bad Request on aiv-cdn.net)
+      shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+        request.headers['Referer'] = 'https://www.primevideo.com/';
+        request.headers['Origin'] = 'https://www.primevideo.com';
+      });
+
+      // Global Error Listener
+      shakaPlayer.addEventListener('error', (event) => {
+        const error = event.detail;
+        console.error('Shaka Error:', error);
+        let msg = 'Playback failed. ';
+        if (error.code === 1001) msg += 'The stream may be offline or blocked.';
+        else if (error.code === 1002) msg += 'Network error (CORS or 400 Bad Request).';
+        else if (error.code === 3016) msg += 'DRM Key error. Check your ClearKey values.';
+        else msg += `Error Code: ${error.code}`;
+        
+        showError(msg);
+      });
+    }
+
+    /* ---------- Load & Parse M3U Playlist ---------- */
     async function loadPlaylist() {
       try {
         const res = await fetch(PLAYLIST_URL);
@@ -423,7 +484,7 @@
       return channels;
     }
 
-    /* ---------- Logo resolution ---------- */
+    /* ---------- Logo Resolution ---------- */
     function getLogoUrl(channel) {
       if (channel.logo && channel.logo.startsWith('http')) return channel.logo;
 
@@ -458,21 +519,17 @@
       };
     }
 
-    /* ---------- Render channels ---------- */
+    /* ---------- Render Channels ---------- */
     function renderChannels(channels) {
       if (!channels.length) {
-        channelsEl.innerHTML = `
-          <div class="empty-state">
-            <div class="icon">📭</div>
-            <p>No channels found.</p>
-          </div>`;
+        channelsEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No channels found.</p></div>`;
         return;
       }
 
       channelsEl.innerHTML = '';
       const fragment = document.createDocumentFragment();
 
-      channels.forEach((ch, idx) => {
+      channels.forEach((ch) => {
         const card = document.createElement('div');
         card.className = 'channel';
         card.dataset.name  = ch.name.toLowerCase();
@@ -520,46 +577,47 @@
         : `${allChannels.length} channels loaded`;
     });
 
-    /* ---------- Cleanup players before starting a new one ---------- */
-    function destroyPlayers() {
-      if (hls) { hls.destroy(); hls = null; }
-      if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
-      if (shakaPlayer) { shakaPlayer.destroy(); shakaPlayer = null; }
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
-    }
-
-    /* ---------- Parse DRM parameters from M3U URL ---------- */
+    /* ---------- DRM Parameter Parsing ---------- */
     function parseDrmParams(url) {
-      // Example: .../cenc.mpd|drmScheme=clearkey&drmLicense=a863...:34ea...
-      const result = { manifestUrl: url, drmScheme: null, clearKeys: null };
+      let manifestUrl = url;
+      let clearKeys = null;
 
-      if (!url.includes('|')) return result;
+      if (url.includes('|')) {
+        const parts = url.split('|');
+        manifestUrl = parts[0];
 
-      const parts = url.split('|');
-      result.manifestUrl = parts[0];
+        // Ensure the base URL is properly encoded
+        manifestUrl = encodeURI(manifestUrl);
 
-      const queryString = parts.slice(1).join('|'); // in case URL has multiple pipes
-      const params = new URLSearchParams(queryString);
+        const queryString = parts.slice(1).join('|');
+        const params = new URLSearchParams(queryString);
 
-      const drmScheme = params.get('drmScheme');
-      const drmLicense = params.get('drmLicense');
+        const drmScheme = params.get('drmScheme');
+        const drmLicense = params.get('drmLicense');
 
-      if (drmScheme === 'clearkey' && drmLicense) {
-        // drmLicense format: "kid:key"
-        const [kid, key] = drmLicense.split(':');
-        if (kid && key) {
-          result.drmScheme = 'clearkey';
-          result.clearKeys = { [kid.trim()]: key.trim() };
+        if (drmScheme === 'clearkey' && drmLicense) {
+          const [kid, key] = drmLicense.split(':');
+          if (kid && key) {
+            clearKeys = { [kid.trim()]: key.trim() };
+          }
         }
+      } else {
+        manifestUrl = encodeURI(manifestUrl);
       }
-      return result;
+
+      return { manifestUrl, clearKeys };
     }
 
-    /* ---------- Play channel ---------- */
-    function playChannel(ch) {
-      destroyPlayers();
+    /* ---------- Play Channel ---------- */
+    async function playChannel(ch) {
+      if (!shakaPlayer) {
+        showError('Shaka Player is not initialized yet.');
+        return;
+      }
+
+      // Hide error overlay, show player
+      playerError.style.display = 'none';
+      playerWrap.classList.add('active');
 
       const logoUrl = getLogoUrl(ch);
       nowPlayingLogo.src = logoUrl || '';
@@ -567,91 +625,33 @@
       nowPlayingName.textContent  = ch.name;
       nowPlayingGroup.textContent = ch.group || '';
 
-      playerWrap.classList.add('active');
+      const parsed = parseDrmParams(ch.url);
 
-      const startPlay = () => {
-        video.play().catch(e => console.log('Play error:', e));
-        requestFullscreen(playerWrap);
-      };
-
-      const url = ch.url;
-      const parsed = parseDrmParams(url);
-
-      // ---- MPEG-DASH with ClearKey DRM (.mpd) ----
-      if (parsed.manifestUrl.includes('.mpd')) {
-        if (parsed.drmScheme === 'clearkey' && parsed.clearKeys) {
-          // Primary: dash.js with protection data
-          try {
-            dashPlayer = dashjs.MediaPlayer().create();
-            dashPlayer.initialize(video, parsed.manifestUrl, false);
-
-            const protData = {
-              "org.w3.clearkey": {
-                "clearkeys": parsed.clearKeys
-              }
-            };
-            dashPlayer.setProtectionData(protData);
-            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
-            dashPlayer.on(dashjs.MediaPlayer.events.ERROR, (e) => {
-              console.error('dash.js error:', e);
-              // Fallback: try Shaka Player if dash.js fails
-              playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
-            });
-          } catch (e) {
-            console.error('dash.js init failed, trying Shaka:', e);
-            playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
-          }
-        } else {
-          // Plain DASH without DRM
-          try {
-            dashPlayer = dashjs.MediaPlayer().create();
-            dashPlayer.initialize(video, parsed.manifestUrl, false);
-            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
-          } catch (e) {
-            console.error('DASH playback failed:', e);
-          }
-        }
-        return;
-      }
-
-      // ---- HLS (.m3u8) ----
-      if (parsed.manifestUrl.includes('.m3u8') && window.Hls && Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(parsed.manifestUrl);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, startPlay);
-        hls.on(Hls.Events.ERROR, (event, data) => console.error('HLS error:', data));
-        return;
-      }
-
-      // ---- Fallback: direct video src ----
-      video.src = parsed.manifestUrl;
-      video.addEventListener('loadedmetadata', startPlay, { once: true });
-      video.load();
-    }
-
-    /* ---------- Shaka Player fallback for DASH ClearKey ---------- */
-    async function playWithShaka(manifestUrl, clearKeys, onReady) {
-      try {
-        shaka.polyfill.installAll();
-        if (!shaka.Player.isBrowserSupported()) {
-          console.warn('Shaka Player not supported in this browser');
-          return;
-        }
-        shakaPlayer = new shaka.Player(video);
+      // Configure Shaka Player with ClearKey if present
+      if (parsed.clearKeys) {
         shakaPlayer.configure({
           drm: {
-            clearKeys: clearKeys
+            clearKeys: parsed.clearKeys
           }
         });
-        shakaPlayer.addEventListener('error', (event) => {
-          console.error('Shaka error:', event.detail);
-        });
-        await shakaPlayer.load(manifestUrl);
-        onReady();
-      } catch (e) {
-        console.error('Shaka playback failed:', e);
+      } else {
+        // Clear any previous DRM config
+        shakaPlayer.configure({ drm: { clearKeys: {} } });
       }
+
+      try {
+        await shakaPlayer.load(parsed.manifestUrl);
+        video.play().catch(e => console.log('Autoplay blocked:', e));
+        requestFullscreen(playerWrap);
+      } catch (e) {
+        console.error('Shaka load failed:', e);
+        // Error is handled by the global event listener
+      }
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      playerError.style.display = 'flex';
     }
 
     function requestFullscreen(el) {
@@ -660,12 +660,20 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    /* ---------- Close player ---------- */
+    /* ---------- Close Player ---------- */
     function closePlayer() {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      
       playerWrap.classList.remove('active');
-      destroyPlayers();
+      playerError.style.display = 'none';
+      
+      if (shakaPlayer) {
+        shakaPlayer.unload().catch(() => {});
+      }
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
     }
 
     closeBtn.onclick = closePlayer;
@@ -690,7 +698,6 @@
         return;
       }
       
-      // Create a fake channel object to reuse the existing playChannel logic
       const customChannel = {
         name: 'Custom Stream',
         url: url,
@@ -702,16 +709,14 @@
     }
 
     playCustomBtn.onclick = playCustomUrl;
-    
-    // Allow pressing "Enter" in the input to start playback
     customUrlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        playCustomUrl();
-      }
+      if (e.key === 'Enter') playCustomUrl();
     });
 
     /* ---------- Init ---------- */
-    loadPlaylist();
+    initShaka().then(() => {
+      loadPlaylist();
+    });
   </script>
 </body>
 </html>
