@@ -65,49 +65,6 @@
       font-size: 16px;
       pointer-events: none;
     }
-
-    /* Custom URL Play Box */
-    .custom-url-box {
-      display: flex;
-      gap: 10px;
-      padding: 12px 24px;
-      background: #0f0f1a;
-      border-bottom: 1px solid #2a2a3a;
-    }
-    .custom-url-box input {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: 1px solid #2a2a3a;
-      background: #12121e;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .custom-url-box input:focus {
-      border-color: #e94560;
-    }
-    .custom-url-box input::placeholder { color: #666; }
-    .custom-url-box button {
-      padding: 10px 24px;
-      border-radius: 8px;
-      border: none;
-      background: #e94560;
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      white-space: nowrap;
-    }
-    .custom-url-box button:hover {
-      background: #d63850;
-    }
-    .custom-url-box button:active {
-      transform: scale(0.97);
-    }
-
     .stats {
       padding: 12px 24px;
       color: #888;
@@ -281,31 +238,6 @@
     .player-info .info-name { font-size: 15px; font-weight: 600; }
     .player-info .info-group { font-size: 12px; color: #aaa; margin-top: 2px; }
 
-    /* Error Overlay */
-    .player-error {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
-      z-index: 10001;
-    }
-    .player-error h2 { color: #e94560; margin-bottom: 12px; font-size: 24px; }
-    .player-error p { color: #ccc; max-width: 500px; margin-bottom: 20px; line-height: 1.5; }
-    .player-error button {
-      padding: 10px 24px;
-      border-radius: 8px;
-      border: none;
-      background: #e94560;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
@@ -318,8 +250,6 @@
       header { padding: 14px 16px; }
       .logo-title { font-size: 20px; }
       .search-box { max-width: 100%; }
-      .custom-url-box { flex-direction: column; padding: 12px 16px; }
-      .custom-url-box button { width: 100%; padding: 12px; }
       .grid { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
       .channel { min-height: 120px; padding: 12px 8px; }
       .channel img, .channel .fallback-logo { width: 56px; height: 56px; }
@@ -336,25 +266,15 @@
       <input type="text" id="searchInput" placeholder="Search channels...">
     </div>
   </header>
-
-  <!-- Custom URL Input Box -->
-  <div class="custom-url-box">
-    <input type="text" id="customUrlInput" placeholder="Paste MPD / M3U8 / Stream URL here... (e.g. https://.../cenc.mpd|drmScheme=clearkey&drmLicense=keyid:key)">
-    <button id="playCustomBtn">▶ Play Custom URL</button>
-  </div>
-
   <div class="stats" id="stats">Loading channels...</div>
   <div id="channels" class="grid"></div>
 
   <div id="playerWrap" class="player-wrap">
-    <video id="video" controls playsinline></video>
-    
+    <video id="player" controls playsinline></video>
     <div class="player-overlay">
       <span style="font-size:15px; font-weight:600;">Now Playing</span>
     </div>
-    
     <button id="closeBtn" class="close-btn">✕</button>
-    
     <div class="player-info" id="playerInfo">
       <img id="nowPlayingLogo" src="" alt="" onerror="this.style.display='none'">
       <div class="info-text">
@@ -362,30 +282,17 @@
         <span class="info-group" id="nowPlayingGroup"></span>
       </div>
     </div>
-
-    <div class="player-error" id="playerError">
-      <h2>Playback Error</h2>
-      <p id="errorMessage">Could not load the stream. The CDN may be blocking the request or the link is invalid.</p>
-      <button onclick="closePlayer()">Close Player</button>
-    </div>
   </div>
 
-  <!-- Shaka Player -->
+  <!-- HLS.js for .m3u8 streams -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  <!-- dash.js for .mpd streams with DRM -->
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+  <!-- Shaka Player as a robust fallback for DASH/DRM -->
   <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
 
   <script>
-    // ==========================================
-    // CONFIGURATION
-    // ==========================================
-    
-    // Your Cloudflare Worker Proxy URL
-    const PROXY_URL = 'https://playerprox.miinbandara.workers.dev/';
-    
-    // The original playlist URL
-    const ORIGINAL_PLAYLIST = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
-    
-    // Route the playlist through the proxy
-    const PLAYLIST_URL = PROXY_URL + '?url=' + encodeURIComponent(ORIGINAL_PLAYLIST);
+    const PLAYLIST_URL = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
 
     const LOGO_SOURCES = [
       'https://live.fanmingming.cn/tv/',
@@ -393,58 +300,22 @@
       'https://raw.githubusercontent.com/Fourqui/tv/master/countries/international/',
     ];
 
-    // ==========================================
-    // DOM ELEMENTS
-    // ==========================================
     const channelsEl  = document.getElementById('channels');
     const statsEl     = document.getElementById('stats');
     const searchInput = document.getElementById('searchInput');
     const playerWrap  = document.getElementById('playerWrap');
-    const video       = document.getElementById('video');
+    const video       = document.getElementById('player');
     const closeBtn    = document.getElementById('closeBtn');
     const nowPlayingLogo  = document.getElementById('nowPlayingLogo');
     const nowPlayingName  = document.getElementById('nowPlayingName');
     const nowPlayingGroup = document.getElementById('nowPlayingGroup');
-    const playerError     = document.getElementById('playerError');
-    const errorMessage    = document.getElementById('errorMessage');
-    
-    const customUrlInput = document.getElementById('customUrlInput');
-    const playCustomBtn  = document.getElementById('playCustomBtn');
 
     let allChannels = [];
+    let hls = null;
+    let dashPlayer = null;
     let shakaPlayer = null;
 
-    // ==========================================
-    // SHAKA PLAYER INIT
-    // ==========================================
-    async function initShaka() {
-      shaka.polyfill.installAll();
-      
-      if (!shaka.Player.isBrowserSupported()) {
-        console.error('Shaka Player is not supported in this browser.');
-        return;
-      }
-
-      shakaPlayer = new shaka.Player();
-      await shakaPlayer.attach(video);
-
-      // Global Error Listener
-      shakaPlayer.addEventListener('error', (event) => {
-        const error = event.detail;
-        console.error('Shaka Error:', error);
-        let msg = 'Playback failed. ';
-        if (error.code === 1001) msg += 'The stream may be offline or blocked.';
-        else if (error.code === 1002) msg += 'Network error (CORS or 400 Bad Request). Check your proxy settings.';
-        else if (error.code === 3016) msg += 'DRM Key error. Check your ClearKey values.';
-        else msg += `Error Code: ${error.code}`;
-        
-        showError(msg);
-      });
-    }
-
-    // ==========================================
-    // PLAYLIST LOADING
-    // ==========================================
+    /* ---------- Load & parse playlist ---------- */
     async function loadPlaylist() {
       try {
         const res = await fetch(PLAYLIST_URL);
@@ -458,7 +329,7 @@
           <div class="empty-state">
             <div class="icon">⚠️</div>
             <p>Failed to load playlist: ${e.message}</p>
-            <p style="margin-top:8px;font-size:13px;">Check if your Cloudflare Worker is online.</p>
+            <p style="margin-top:8px;font-size:13px;">Check CORS or use a proxy worker.</p>
           </div>`;
         statsEl.textContent = 'Error loading playlist';
       }
@@ -496,9 +367,7 @@
       return channels;
     }
 
-    // ==========================================
-    // LOGO RESOLUTION
-    // ==========================================
+    /* ---------- Logo resolution ---------- */
     function getLogoUrl(channel) {
       if (channel.logo && channel.logo.startsWith('http')) return channel.logo;
 
@@ -533,19 +402,21 @@
       };
     }
 
-    // ==========================================
-    // RENDER CHANNELS
-    // ==========================================
+    /* ---------- Render channels ---------- */
     function renderChannels(channels) {
       if (!channels.length) {
-        channelsEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No channels found.</p></div>`;
+        channelsEl.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <p>No channels found.</p>
+          </div>`;
         return;
       }
 
       channelsEl.innerHTML = '';
       const fragment = document.createDocumentFragment();
 
-      channels.forEach((ch) => {
+      channels.forEach((ch, idx) => {
         const card = document.createElement('div');
         card.className = 'channel';
         card.dataset.name  = ch.name.toLowerCase();
@@ -578,9 +449,7 @@
       channelsEl.appendChild(fragment);
     }
 
-    // ==========================================
-    // SEARCH
-    // ==========================================
+    /* ---------- Search ---------- */
     searchInput.addEventListener('input', () => {
       const q = searchInput.value.trim().toLowerCase();
       const cards = channelsEl.querySelectorAll('.channel');
@@ -595,51 +464,46 @@
         : `${allChannels.length} channels loaded`;
     });
 
-    // ==========================================
-    // DRM PARSING
-    // ==========================================
-    function parseDrmParams(url) {
-      let manifestUrl = url;
-      let clearKeys = null;
-
-      if (url.includes('|')) {
-        const parts = url.split('|');
-        manifestUrl = parts[0];
-
-        // Ensure the base URL is properly encoded
-        manifestUrl = encodeURI(manifestUrl);
-
-        const queryString = parts.slice(1).join('|');
-        const params = new URLSearchParams(queryString);
-
-        const drmScheme = params.get('drmScheme');
-        const drmLicense = params.get('drmLicense');
-
-        if (drmScheme === 'clearkey' && drmLicense) {
-          const [kid, key] = drmLicense.split(':');
-          if (kid && key) {
-            clearKeys = { [kid.trim()]: key.trim() };
-          }
-        }
-      } else {
-        manifestUrl = encodeURI(manifestUrl);
-      }
-
-      return { manifestUrl, clearKeys };
+    /* ---------- Cleanup players before starting a new one ---------- */
+    function destroyPlayers() {
+      if (hls) { hls.destroy(); hls = null; }
+      if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
+      if (shakaPlayer) { shakaPlayer.destroy(); shakaPlayer = null; }
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
     }
 
-    // ==========================================
-    // PLAY CHANNEL (With Proxy Integration)
-    // ==========================================
-    async function playChannel(ch) {
-      if (!shakaPlayer) {
-        showError('Shaka Player is not initialized yet.');
-        return;
-      }
+    /* ---------- Parse DRM parameters from M3U URL ---------- */
+    function parseDrmParams(url) {
+      // Example: .../cenc.mpd|drmScheme=clearkey&drmLicense=a863...:34ea...
+      const result = { manifestUrl: url, drmScheme: null, clearKeys: null };
 
-      // Hide error overlay, show player
-      playerError.style.display = 'none';
-      playerWrap.classList.add('active');
+      if (!url.includes('|')) return result;
+
+      const parts = url.split('|');
+      result.manifestUrl = parts[0];
+
+      const queryString = parts.slice(1).join('|'); // in case URL has multiple pipes
+      const params = new URLSearchParams(queryString);
+
+      const drmScheme = params.get('drmScheme');
+      const drmLicense = params.get('drmLicense');
+
+      if (drmScheme === 'clearkey' && drmLicense) {
+        // drmLicense format: "kid:key"
+        const [kid, key] = drmLicense.split(':');
+        if (kid && key) {
+          result.drmScheme = 'clearkey';
+          result.clearKeys = { [kid.trim()]: key.trim() };
+        }
+      }
+      return result;
+    }
+
+    /* ---------- Play channel ---------- */
+    function playChannel(ch) {
+      destroyPlayers();
 
       const logoUrl = getLogoUrl(ch);
       nowPlayingLogo.src = logoUrl || '';
@@ -647,37 +511,91 @@
       nowPlayingName.textContent  = ch.name;
       nowPlayingGroup.textContent = ch.group || '';
 
-      // 1. Parse the original URL to get the clean MPD link and ClearKeys
-      const parsed = parseDrmParams(ch.url);
+      playerWrap.classList.add('active');
 
-      // 2. Wrap the CLEAN manifest URL with your Cloudflare Worker proxy
-      const proxiedUrl = PROXY_URL + '?url=' + encodeURIComponent(parsed.manifestUrl);
-
-      // 3. Configure Shaka Player with ClearKey if present
-      if (parsed.clearKeys) {
-        shakaPlayer.configure({
-          drm: {
-            clearKeys: parsed.clearKeys
-          }
-        });
-      } else {
-        shakaPlayer.configure({ drm: { clearKeys: {} } });
-      }
-
-      // 4. Load the proxied URL
-      try {
-        await shakaPlayer.load(proxiedUrl);
-        video.play().catch(e => console.log('Autoplay blocked:', e));
+      const startPlay = () => {
+        video.play().catch(e => console.log('Play error:', e));
         requestFullscreen(playerWrap);
-      } catch (e) {
-        console.error('Shaka load failed:', e);
-        // Error is handled by the global event listener
+      };
+
+      const url = ch.url;
+      const parsed = parseDrmParams(url);
+
+      // ---- MPEG-DASH with ClearKey DRM (.mpd) ----
+      if (parsed.manifestUrl.includes('.mpd')) {
+        if (parsed.drmScheme === 'clearkey' && parsed.clearKeys) {
+          // Primary: dash.js with protection data
+          try {
+            dashPlayer = dashjs.MediaPlayer().create();
+            dashPlayer.initialize(video, parsed.manifestUrl, false);
+
+            const protData = {
+              "org.w3.clearkey": {
+                "clearkeys": parsed.clearKeys
+              }
+            };
+            dashPlayer.setProtectionData(protData);
+            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
+            dashPlayer.on(dashjs.MediaPlayer.events.ERROR, (e) => {
+              console.error('dash.js error:', e);
+              // Fallback: try Shaka Player if dash.js fails
+              playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
+            });
+          } catch (e) {
+            console.error('dash.js init failed, trying Shaka:', e);
+            playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
+          }
+        } else {
+          // Plain DASH without DRM
+          try {
+            dashPlayer = dashjs.MediaPlayer().create();
+            dashPlayer.initialize(video, parsed.manifestUrl, false);
+            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
+          } catch (e) {
+            console.error('DASH playback failed:', e);
+          }
+        }
+        return;
       }
+
+      // ---- HLS (.m3u8) ----
+      if (parsed.manifestUrl.includes('.m3u8') && window.Hls && Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(parsed.manifestUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, startPlay);
+        hls.on(Hls.Events.ERROR, (event, data) => console.error('HLS error:', data));
+        return;
+      }
+
+      // ---- Fallback: direct video src ----
+      video.src = parsed.manifestUrl;
+      video.addEventListener('loadedmetadata', startPlay, { once: true });
+      video.load();
     }
 
-    function showError(msg) {
-      errorMessage.textContent = msg;
-      playerError.style.display = 'flex';
+    /* ---------- Shaka Player fallback for DASH ClearKey ---------- */
+    async function playWithShaka(manifestUrl, clearKeys, onReady) {
+      try {
+        shaka.polyfill.installAll();
+        if (!shaka.Player.isBrowserSupported()) {
+          console.warn('Shaka Player not supported in this browser');
+          return;
+        }
+        shakaPlayer = new shaka.Player(video);
+        shakaPlayer.configure({
+          drm: {
+            clearKeys: clearKeys
+          }
+        });
+        shakaPlayer.addEventListener('error', (event) => {
+          console.error('Shaka error:', event.detail);
+        });
+        await shakaPlayer.load(manifestUrl);
+        onReady();
+      } catch (e) {
+        console.error('Shaka playback failed:', e);
+      }
     }
 
     function requestFullscreen(el) {
@@ -686,22 +604,12 @@
       else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
 
-    // ==========================================
-    // CLOSE PLAYER
-    // ==========================================
+    /* ---------- Close player ---------- */
     function closePlayer() {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      
       playerWrap.classList.remove('active');
-      playerError.style.display = 'none';
-      
-      if (shakaPlayer) {
-        shakaPlayer.unload().catch(() => {});
-      }
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
+      destroyPlayers();
     }
 
     closeBtn.onclick = closePlayer;
@@ -718,37 +626,8 @@
       }
     });
 
-    // ==========================================
-    // CUSTOM URL PLAYBACK
-    // ==========================================
-    function playCustomUrl() {
-      const url = customUrlInput.value.trim();
-      if (!url) {
-        alert('Please paste a stream URL first.');
-        return;
-      }
-      
-      const customChannel = {
-        name: 'Custom Stream',
-        url: url,
-        group: 'Custom',
-        logo: ''
-      };
-      
-      playChannel(customChannel);
-    }
-
-    playCustomBtn.onclick = playCustomUrl;
-    customUrlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') playCustomUrl();
-    });
-
-    // ==========================================
-    // INIT
-    // ==========================================
-    initShaka().then(() => {
-      loadPlaylist();
-    });
+    /* ---------- Init ---------- */
+    loadPlaylist();
   </script>
 </body>
 </html>
