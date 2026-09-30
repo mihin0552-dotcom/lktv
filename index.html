@@ -185,81 +185,142 @@
       max-width: 90%;
     }
 
-    /* ---------- Telegram Section ---------- */
-    .telegram-section {
+    /* ---------- Live Cricket Section ---------- */
+    .cricket-section {
       padding: 24px;
-      max-width: 1000px;
+      max-width: 800px;
       margin: 0 auto;
     }
-    .telegram-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 20px;
-      padding: 18px 20px;
-      background: linear-gradient(135deg, #16162a 0%, #1a1a30 100%);
-      border-radius: 14px;
-      border: 1px solid #2a2a3a;
-    }
-    .telegram-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #0088cc, #00aaff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
-    }
-    .telegram-header .tg-info { display: flex; flex-direction: column; }
-    .telegram-header .tg-title { font-size: 16px; font-weight: 600; }
-    .telegram-header .tg-sub { font-size: 13px; color: #888; margin-top: 2px; }
-    .telegram-header .tg-open {
-      margin-left: auto;
-      padding: 10px 18px;
-      background: #0088cc;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s, transform 0.15s;
-      white-space: nowrap;
-      font-family: inherit;
-    }
-    .telegram-header .tg-open:hover {
-      background: #00aaff;
-      transform: translateY(-1px);
-    }
-    .telegram-iframe-wrap {
-      background: #12121e;
-      border-radius: 14px;
-      border: 1px solid #2a2a3a;
-      overflow: hidden;
-      min-height: 600px;
-      position: relative;
-    }
-    .telegram-iframe-wrap iframe {
-      width: 100%;
-      height: 700px;
-      border: none;
+    .cricket-box {
       display: block;
-      background: #12121e;
+      text-decoration: none;
+      color: inherit;
+      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #2a2a3a;
+      border-radius: 20px;
+      padding: 40px 32px;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
     }
-    .tg-note {
-      margin-top: 14px;
-      padding: 12px 16px;
-      background: rgba(233, 69, 96, 0.08);
-      border: 1px solid rgba(233, 69, 96, 0.25);
-      border-radius: 10px;
-      font-size: 12.5px;
-      color: #b0b0b0;
+    .cricket-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(233,69,96,0.1) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .cricket-box:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border-color: #e94560;
+    }
+    .cricket-box:hover::before { opacity: 1; }
+
+    .cricket-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .cricket-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .cricket-title span { color: #e94560; }
+    .cricket-subtitle {
+      font-size: 15px;
+      color: #aaa;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
       line-height: 1.6;
     }
-    .tg-note strong { color: #e94560; }
+    .cricket-cta {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #e94560;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      position: relative;
+      z-index: 1;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .cricket-box:hover .cricket-cta {
+      background: #ff5a75;
+      transform: scale(1.03);
+    }
+
+    .cricket-apps {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #2a2a3a;
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      text-align: left;
+    }
+    .cricket-app-group {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #2a2a3a;
+    }
+    .cricket-app-group h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e94560;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .cricket-app-group p {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.7;
+    }
+    .cricket-app-group code {
+      background: rgba(233,69,96,0.15);
+      color: #ff8a9e;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    .cricket-app-group .app-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .cricket-app-group .app-list li {
+      font-size: 13px;
+      color: #bbb;
+      padding: 3px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+    .cricket-app-group .app-list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #e94560;
+      font-weight: bold;
+    }
 
     /* Player */
     .player-wrap {
@@ -362,10 +423,10 @@
       .channel { min-height: 120px; padding: 12px 8px; }
       .channel img, .channel .fallback-logo { width: 56px; height: 56px; }
       .player-info { bottom: 80px; left: 12px; }
-      .telegram-section { padding: 16px; }
-      .telegram-header { flex-wrap: wrap; }
-      .telegram-header .tg-open { margin-left: 0; width: 100%; text-align: center; }
-      .telegram-iframe-wrap iframe { height: 500px; }
+      .cricket-section { padding: 16px; }
+      .cricket-box { padding: 28px 20px; }
+      .cricket-title { font-size: 22px; }
+      .cricket-apps { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -382,7 +443,7 @@
   <!-- Tab Navigation -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="channels">📡 Channels</button>
-    <button class="tab-btn" data-tab="telegram">✈️ Telegram</button>
+    <button class="tab-btn" data-tab="cricket">🏏 Live Cricket</button>
   </div>
 
   <!-- ================= CHANNELS TAB ================= -->
@@ -391,37 +452,46 @@
     <div id="channels" class="grid"></div>
   </div>
 
-  <!-- ================= TELEGRAM TAB ================= -->
-  <div id="tab-telegram" class="tab-content">
-    <div class="telegram-section">
+  <!-- ================= LIVE CRICKET TAB ================= -->
+  <div id="tab-cricket" class="tab-content">
+    <div class="cricket-section">
 
-      <div class="telegram-header">
-        <div class="telegram-icon">✈️</div>
-        <div class="tg-info">
-          <span class="tg-title" id="tgChannelTitle">NETSAFE_ZONE</span>
-          <span class="tg-sub">Live feed from a public Telegram channel</span>
+      <!-- The clickable box that redirects to Telegram -->
+      <a class="cricket-box" 
+         href="https://t.me/s/Net_safe_zone" 
+         target="_blank" 
+         rel="noopener">
+
+        <span class="cricket-icon">🏏</span>
+        <div class="cricket-title">Did you want <span>Live Cricket</span> Streaming Links?</div>
+        <div class="cricket-subtitle">
+          Check our Telegram channel for the latest live cricket streaming links.
+          We post new links as soon as matches begin.
         </div>
-        <a class="tg-open" id="tgOpenLink" href="https://t.me/Net_safe_zone" target="_blank" rel="noopener">
-          Open in Telegram ↗
-        </a>
-      </div>
+        <span class="cricket-cta">Check Live Links on Telegram ↗</span>
 
-      <div class="telegram-iframe-wrap">
-        <iframe
-          id="telegramIframe"
-          src="https://t.me/s/Net_safe_zone"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
-        </iframe>
-      </div>
+        <!-- App instructions inside the box -->
+        <div class="cricket-apps">
+          <div class="cricket-app-group">
+            <h4>🖥️ Windows, Mac & Linux</h4>
+            <p>
+              Use the <strong>AuthoIPTV</strong> desktop app to play these streams.
+              It supports <code>.mpd</code> (DASH) and ClearKey DRM playback.
+            </p>
+          </div>
+          <div class="cricket-app-group">
+            <h4>📱 Android & iOS</h4>
+            <p>
+              Use one of these recommended players:
+            </p>
+            <ul class="app-list">
+              <li><strong>Android:</strong> TiviMate, OTT Navigator, IPTV Smarters</li>
+              <li><strong>iOS:</strong> GSE Smart IPTV, iPlayTV</li>
+            </ul>
+          </div>
+        </div>
 
-      <div class="tg-note">
-        <strong>Note:</strong> If the feed above appears blank, the channel may be private, or your
-        browser/site security policy (CSP) is blocking the iframe. In that case, use the
-        <strong>"Open in Telegram"</strong> button above. You can also try a widget service like
-        Elfsight if direct embedding doesn't work.
-      </div>
+      </a>
 
     </div>
   </div>
@@ -452,18 +522,6 @@
   <script>
     const PLAYLIST_URL = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
 
-    /* ============================================================
-       ⚙️ TELEGRAM CHANNEL CONFIGURATION
-       Channel: https://t.me/Net_safe_zone
-    ============================================================ */
-    const TELEGRAM_CHANNEL_USERNAME = 'Net_safe_zone';
-    const TELEGRAM_CHANNEL_TITLE    = 'NETSAFE_ZONE';
-
-    // Apply the config to the iframe + header automatically
-    document.getElementById('telegramIframe').src = 'https://t.me/s/' + TELEGRAM_CHANNEL_USERNAME;
-    document.getElementById('tgOpenLink').href    = 'https://t.me/' + TELEGRAM_CHANNEL_USERNAME;
-    document.getElementById('tgChannelTitle').textContent = TELEGRAM_CHANNEL_TITLE;
-
     const LOGO_SOURCES = [
       'https://live.fanmingming.cn/tv/',
       'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/',
@@ -490,7 +548,7 @@
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = {
       channels: document.getElementById('tab-channels'),
-      telegram: document.getElementById('tab-telegram')
+      cricket: document.getElementById('tab-cricket')
     };
 
     tabButtons.forEach(btn => {
