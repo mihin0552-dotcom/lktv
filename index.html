@@ -2,215 +2,272 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#000000">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>My TV</title>
   <style>
-    :root {
-      --bg: #000;
-      --surface: #0e0e0e;
-      --surface-2: #151515;
-      --outline: #262626;
-      --on-surface: #e6e1e5;
-      --on-variant: #938f99;
-      --primary: #d0bcff;
-      --on-primary: #381e72;
-      --r-md: 16px; --r-lg: 24px; --r-full: 999px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     html { color-scheme: dark; }
     body {
-      font-family: Roboto, 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--on-surface);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
       min-height: 100vh;
-      padding-bottom: env(safe-area-inset-bottom);
     }
+    body.no-scroll { overflow: hidden; }
+    button { font-family: inherit; }
+    :focus-visible { outline: 2px solid #e94560; outline-offset: 2px; }
 
-    /* ---------- Top bar ---------- */
     header {
-      position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center; gap: 16px;
-      padding: 12px 20px;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      padding: 20px 24px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid #2a2a3a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .logo-title { font-size: 20px; font-weight: 500; letter-spacing: .2px; white-space: nowrap; }
-    .logo-title span { color: var(--primary); }
-    .search-box { position: relative; flex: 1; max-width: 420px; margin-left: auto; }
+    .logo-title {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 24px; font-weight: 700; letter-spacing: 0.5px;
+    }
+    .logo-title span { color: #e94560; }
+    .search-box { position: relative; flex: 1; max-width: 400px; min-width: 200px; }
     .search-box input {
-      width: 100%; height: 48px;
-      padding: 0 16px 0 48px;
-      border-radius: var(--r-full);
-      border: none; outline: none;
-      background: var(--surface-2);
-      color: var(--on-surface);
-      font-size: 15px; font-family: inherit;
-      transition: background .2s, box-shadow .2s;
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      border-radius: 12px;
+      border: 1px solid #2a2a3a;
+      background: #12121e;
+      color: #fff;
+      font-size: 16px; /* 16px stops iPhone zooming on focus */
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .search-box input:focus { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--primary); }
-    .search-box input::placeholder { color: var(--on-variant); }
+    .search-box input:focus {
+      border-color: #e94560;
+      box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.15);
+    }
+    .search-box input::placeholder { color: #666; }
     .search-icon {
-      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--on-variant); font-size: 16px; pointer-events: none;
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #666; font-size: 16px; pointer-events: none;
     }
 
-    /* ---------- Tabs ---------- */
+    /* Tabs */
     .tabs {
-      display: flex; padding: 0 12px;
-      border-bottom: 1px solid var(--outline);
-      position: sticky; top: 72px; z-index: 90; background: var(--bg);
+      display: flex; gap: 8px; padding: 12px 24px 0;
+      background: #0a0a0a; border-bottom: 1px solid #1a1a2a;
     }
     .tab-btn {
-      flex: 1; max-width: 220px; height: 48px;
-      background: transparent; border: none;
-      color: var(--on-variant);
-      font-size: 14px; font-weight: 500; font-family: inherit; letter-spacing: .1px;
-      cursor: pointer; position: relative;
-      transition: color .2s;
+      padding: 10px 20px; background: transparent; border: none;
+      color: #888; font-size: 14px; font-weight: 600; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
     }
-    .tab-btn::after {
-      content: ''; position: absolute; left: 20%; right: 20%; bottom: 0; height: 3px;
-      border-radius: 3px 3px 0 0; background: var(--primary);
-      transform: scaleX(0); transition: transform .2s;
-    }
-    .tab-btn:hover { color: var(--on-surface); }
-    .tab-btn.active { color: var(--primary); }
-    .tab-btn.active::after { transform: scaleX(1); }
+    .tab-btn:hover { color: #ccc; }
+    .tab-btn.active { color: #e94560; border-bottom-color: #e94560; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    .stats { padding: 14px 20px 0; color: var(--on-variant); font-size: 13px; }
-
-    /* ---------- Channel grid ---------- */
+    .stats {
+      padding: 12px 24px; color: #888; font-size: 13px;
+      border-bottom: 1px solid #1a1a2a;
+    }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px; padding: 16px 20px 32px;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 16px; padding: 24px;
     }
     .channel {
-      background: var(--surface);
-      border-radius: var(--r-lg);
-      padding: 18px 10px 14px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-      min-height: 136px; text-align: center; cursor: pointer;
+      background: linear-gradient(145deg, #16162a 0%, #1a1a30 100%);
+      border-radius: 14px; padding: 16px 12px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+      border: 1px solid #2a2a3a; text-align: center;
+      min-height: 140px; justify-content: center;
       position: relative; overflow: hidden;
-      transition: background .15s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .channel:hover { background: var(--surface-2); }
-    .channel:active { transform: scale(.97); background: #1d1d1d; }
+    .channel::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(233,69,96,0.08) 0%, transparent 60%);
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .channel:hover, .channel:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      border-color: #e94560;
+    }
+    .channel:hover::before, .channel:focus-visible::before { opacity: 1; }
+    .channel img, .channel .fallback-logo {
+      width: 72px; height: 72px; border-radius: 10px; flex-shrink: 0;
+    }
     .channel img {
-      width: 64px; height: 64px; object-fit: contain;
-      border-radius: var(--r-md); background: rgba(255,255,255,.05); padding: 6px;
+      object-fit: contain; background: rgba(255,255,255,0.04);
+      padding: 6px; transition: transform 0.2s;
     }
+    .channel:hover img { transform: scale(1.08); }
     .channel .fallback-logo {
-      width: 64px; height: 64px; border-radius: var(--r-md);
-      background: var(--surface-2); color: var(--primary);
+      background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px; font-weight: 500; text-transform: uppercase; flex-shrink: 0;
+      font-size: 28px; font-weight: 700; color: #e94560; text-transform: uppercase;
     }
     .channel .ch-name {
-      font-size: 13px; font-weight: 500; line-height: 1.3; word-break: break-word;
+      font-size: 13px; font-weight: 500; line-height: 1.35;
+      word-break: break-word;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
       overflow: hidden; max-width: 100%;
     }
     .channel .group-tag {
-      font-size: 11px; color: var(--on-variant);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92%;
+      font-size: 10px; color: #888; background: rgba(255,255,255,0.05);
+      padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; max-width: 90%;
     }
 
-    /* ---------- Cricket tab ---------- */
-    .cricket-section { padding: 20px; max-width: 760px; margin: 0 auto; }
+    /* Cricket */
+    .cricket-section { padding: 24px; max-width: 800px; margin: 0 auto; }
     .cricket-box {
       display: block; text-decoration: none; color: inherit;
-      background: var(--surface); border-radius: 28px;
-      padding: 36px 24px; text-align: center;
+      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #2a2a3a; border-radius: 20px;
+      padding: 40px 32px; text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative; overflow: hidden; cursor: pointer;
     }
-    .cricket-icon { font-size: 52px; margin-bottom: 12px; display: block; }
-    .cricket-title { font-size: 24px; font-weight: 500; margin-bottom: 10px; }
-    .cricket-title span { color: var(--primary); }
-    .cricket-subtitle { font-size: 14px; color: var(--on-variant); margin-bottom: 22px; line-height: 1.6; }
+    .cricket-box::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(233,69,96,0.1) 0%, transparent 60%);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .cricket-box:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-color: #e94560; }
+    .cricket-box:hover::before { opacity: 1; }
+    .cricket-icon { font-size: 64px; margin-bottom: 16px; display: block; position: relative; z-index: 1; }
+    .cricket-title { font-size: 28px; font-weight: 700; margin-bottom: 12px; position: relative; z-index: 1; }
+    .cricket-title span { color: #e94560; }
+    .cricket-subtitle { font-size: 15px; color: #aaa; margin-bottom: 24px; position: relative; z-index: 1; line-height: 1.6; }
     .cricket-cta {
-      display: inline-flex; align-items: center; height: 48px; padding: 0 28px;
-      background: var(--primary); color: var(--on-primary);
-      font-size: 14px; font-weight: 500; border-radius: var(--r-full);
-      transition: filter .15s, transform .1s;
+      display: inline-block; padding: 14px 32px; background: #e94560; color: #fff;
+      font-size: 16px; font-weight: 600; border-radius: 12px;
+      transition: background 0.2s, transform 0.15s; position: relative; z-index: 1;
     }
-    .cricket-box:hover .cricket-cta { filter: brightness(1.08); }
-    .cricket-box:active .cricket-cta { transform: scale(.97); }
+    .cricket-box:hover .cricket-cta { background: #ff5a75; transform: scale(1.03); }
     .cricket-apps {
-      margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left;
+      margin-top: 24px; padding-top: 24px; border-top: 1px solid #2a2a3a;
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left;
     }
-    .cricket-app-group { background: var(--surface-2); border-radius: var(--r-md); padding: 16px; }
-    .cricket-app-group h4 {
-      font-size: 12px; font-weight: 500; color: var(--primary);
-      margin-bottom: 8px; text-transform: uppercase; letter-spacing: .6px;
+    .cricket-app-group {
+      background: rgba(255,255,255,0.03); border-radius: 12px;
+      padding: 16px; border: 1px solid #2a2a3a;
     }
-    .cricket-app-group p, .cricket-app-group .app-list li {
-      font-size: 13px; color: var(--on-variant); line-height: 1.7;
-    }
-    .cricket-app-group strong { color: var(--on-surface); font-weight: 500; }
+    .cricket-app-group h4 { font-size: 13px; font-weight: 600; color: #e94560; margin-bottom: 8px; letter-spacing: 0.3px; }
+    .cricket-app-group p { font-size: 13px; color: #bbb; line-height: 1.7; }
     .cricket-app-group code {
-      background: rgba(208,188,255,.12); color: var(--primary);
-      padding: 1px 6px; border-radius: 6px; font-size: 12px; font-family: monospace;
+      background: rgba(233,69,96,0.15); color: #ff8a9e;
+      padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace;
     }
-    .cricket-app-group .app-list { list-style: none; margin-top: 4px; }
-    .cricket-app-group .app-list li { padding: 2px 0; }
+    .cricket-app-group .app-list { list-style: none; }
+    .cricket-app-group .app-list li { font-size: 13px; color: #bbb; padding: 3px 0 3px 16px; position: relative; }
+    .cricket-app-group .app-list li::before { content: '•'; position: absolute; left: 0; color: #e94560; font-weight: bold; }
 
-    /* ---------- Player ---------- */
-    .player-wrap { position: fixed; inset: 0; background: #000; display: none; z-index: 9999; }
+    /* Player */
+    .player-wrap {
+      position: fixed; inset: 0; background: #000;
+      display: none; z-index: 9999;
+    }
     .player-wrap.active { display: block; }
     .player-wrap video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-
-    .spinner {
-      position: absolute; top: 50%; left: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px;
-      border-radius: 50%; border: 4px solid rgba(255,255,255,.15); border-top-color: var(--primary);
-      animation: spin .8s linear infinite; pointer-events: none; display: none; z-index: 5;
+    .player-overlay {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 20px 70px 20px 20px;
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
     }
-    .player-wrap.loading .spinner { display: block; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .player-top {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 10;
-      padding: calc(12px + env(safe-area-inset-top)) 16px 32px;
-      display: flex; align-items: center; gap: 12px;
-      background: linear-gradient(to bottom, rgba(0,0,0,.75), transparent);
-      opacity: 0; transition: opacity .25s; pointer-events: none;
-    }
-    .player-wrap.show-ui .player-top { opacity: 1; pointer-events: auto; }
-    .player-top img {
-      width: 40px; height: 40px; object-fit: contain; border-radius: 10px;
-      background: rgba(255,255,255,.08); padding: 4px;
-    }
-    .info-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-    .info-name { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .info-group { font-size: 12px; color: var(--on-variant); margin-top: 2px; }
-    .live-dot { color: #ff5252; font-size: 12px; font-weight: 500; letter-spacing: .6px; }
     .close-btn {
-      width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
-      background: rgba(255,255,255,.12); color: #fff; font-size: 18px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      transition: background .2s, transform .1s;
+      position: absolute; top: 16px; right: 16px; z-index: 10000;
+      background: rgba(255,255,255,0.15);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      border: none; color: #fff; font-size: 22px;
+      width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.15s;
     }
-    .close-btn:hover { background: rgba(255,255,255,.22); }
-    .close-btn:active { transform: scale(.92); }
+    .close-btn:hover { background: rgba(233, 69, 96, 0.8); transform: scale(1.05); }
+    .player-info {
+      position: absolute; bottom: 70px; left: 24px;
+      background: rgba(0, 0, 0, 0.6);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 8px 16px;
+      display: flex; align-items: center; gap: 12px;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      max-width: calc(100% - 48px);
+    }
+    /* Overlays show while the mouse/finger moves (JS adds .show-ui) */
+    .player-wrap.show-ui .player-overlay,
+    .player-wrap.show-ui .player-info { opacity: 1; }
+    .player-info img {
+      width: 40px; height: 40px; object-fit: contain; border-radius: 6px;
+      background: rgba(255,255,255,0.1); padding: 4px;
+    }
+    .player-info .info-text { display: flex; flex-direction: column; min-width: 0; }
+    .player-info .info-name { font-size: 15px; font-weight: 600; }
+    .player-info .info-group { font-size: 12px; color: #aaa; margin-top: 2px; }
 
-    .empty-state { grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: var(--on-variant); }
-    .empty-state .icon { font-size: 44px; margin-bottom: 14px; }
+    .player-status {
+      position: absolute; inset: 0; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; text-align: center; padding: 24px;
+      background: rgba(0,0,0,0.55); pointer-events: none;
+    }
+    .player-status.visible { display: flex; }
+    .player-status .msg { font-size: 16px; max-width: 460px; line-height: 1.5; }
+    .player-status .spinner {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.2); border-top-color: #e94560;
+      animation: spin 0.9s linear infinite;
+    }
+    .player-status.error .spinner { display: none; }
+    .player-status .retry-btn {
+      display: none; pointer-events: auto;
+      padding: 10px 24px; border: none; border-radius: 10px;
+      background: #e94560; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .player-status.error .retry-btn { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+      .player-status .spinner { animation-duration: 2.4s; }
+    }
+
+    .empty-state { grid-column: 1 / -1; text-align: center; padding: 80px 20px; color: #888; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state .retry-btn {
+      margin-top: 16px; padding: 10px 24px; border: none; border-radius: 10px;
+      background: #e94560; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
 
     @media (max-width: 600px) {
-      header { padding: 10px 14px; gap: 10px; }
-      .logo-title { font-size: 18px; }
-      .tabs { top: 68px; padding: 0 4px; }
-      .tab-btn { max-width: none; }
-      .grid { padding: 12px 14px 28px; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
-      .channel { min-height: 116px; padding: 14px 6px 12px; border-radius: 20px; }
-      .channel img, .channel .fallback-logo { width: 52px; height: 52px; }
-      .channel .ch-name { font-size: 12px; }
-      .cricket-section { padding: 14px; }
-      .cricket-box { padding: 28px 18px; }
-      .cricket-title { font-size: 20px; }
+      header { padding: 14px 16px; }
+      .logo-title { font-size: 20px; }
+      .search-box { max-width: 100%; }
+      .tabs { padding: 10px 16px 0; }
+      .tab-btn { padding: 8px 14px; font-size: 13px; }
+      .grid { padding: 16px; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+      .channel { min-height: 120px; padding: 12px 8px; }
+      .channel img, .channel .fallback-logo { width: 56px; height: 56px; }
+      .player-info { bottom: 80px; left: 12px; }
+      .cricket-section { padding: 16px; }
+      .cricket-box { padding: 28px 20px; }
+      .cricket-title { font-size: 22px; }
       .cricket-apps { grid-template-columns: 1fr; }
     }
   </style>
@@ -218,544 +275,649 @@
 <body>
 
   <header>
-    <div class="logo-title">My <span>TV</span></div>
+    <div class="logo-title">📺 My <span>TV</span></div>
     <div class="search-box" id="searchBoxWrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Search channels...">
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input type="search" id="searchInput" placeholder="Search channels..." aria-label="Search channels" autocomplete="off">
     </div>
   </header>
 
-  <!-- Tab Navigation -->
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="channels">Channels</button>
-    <button class="tab-btn" data-tab="cricket">Live Cricket</button>
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="channels" role="tab" aria-selected="true">📡 Channels</button>
+    <button class="tab-btn" data-tab="cricket" role="tab" aria-selected="false">🏏 Live Cricket</button>
   </div>
 
-  <!-- ================= CHANNELS TAB ================= -->
   <div id="tab-channels" class="tab-content active">
-    <div class="stats" id="stats">Loading channels...</div>
+    <div class="stats" id="stats" aria-live="polite">Loading channels...</div>
     <div id="channels" class="grid"></div>
   </div>
 
-  <!-- ================= LIVE CRICKET TAB ================= -->
   <div id="tab-cricket" class="tab-content">
     <div class="cricket-section">
-
-      <!-- The clickable box that redirects to Telegram -->
-      <a class="cricket-box" 
-         href="https://t.me/s/Net_safe_zone" 
-         target="_blank" 
-         rel="noopener">
-
+      <a class="cricket-box" href="https://t.me/s/Net_safe_zone" target="_blank" rel="noopener noreferrer">
         <span class="cricket-icon">🏏</span>
-        <div class="cricket-title">Did you want <span>Live Cricket</span> Streaming Links?</div>
+        <div class="cricket-title">Want <span>Live Cricket</span> streaming links?</div>
         <div class="cricket-subtitle">
           Check our Telegram channel for the latest live cricket streaming links.
           We post new links as soon as matches begin.
         </div>
-        <span class="cricket-cta">Check Live Links on Telegram ↗</span>
-
-        <!-- App instructions inside the box -->
+        <span class="cricket-cta">Open Telegram ↗</span>
         <div class="cricket-apps">
           <div class="cricket-app-group">
-            <h4>🖥️ Windows, Mac & Linux</h4>
+            <h4>🖥️ Windows, Mac &amp; Linux</h4>
             <p>
               Use the <strong>AuthoIPTV</strong> desktop app to play these streams.
               It supports <code>.mpd</code> (DASH) and ClearKey DRM playback.
             </p>
           </div>
           <div class="cricket-app-group">
-            <h4>📱 Android & iOS</h4>
-            <p>
-              Use one of these recommended players:
-            </p>
+            <h4>📱 Android &amp; iOS</h4>
+            <p>Use one of these recommended players:</p>
             <ul class="app-list">
               <li><strong>Android:</strong> TiviMate, OTT Navigator, IPTV Smarters</li>
               <li><strong>iOS:</strong> GSE Smart IPTV, iPlayTV</li>
             </ul>
           </div>
         </div>
-
       </a>
-
     </div>
   </div>
 
-  <!-- ================= PLAYER ================= -->
-  <div id="playerWrap" class="player-wrap">
-    <video id="player" controls playsinline></video>
-    <div class="spinner"></div>
-    <div class="player-top" id="playerInfo">
-      <img id="nowPlayingLogo" src="" alt="" onerror="this.style.display='none'">
+  <!-- Player -->
+  <div id="playerWrap" class="player-wrap" role="dialog" aria-modal="true" aria-label="Video player">
+    <video id="player" controls playsinline webkit-playsinline></video>
+    <div class="player-overlay">
+      <span style="font-size:15px; font-weight:600;">Now playing</span>
+    </div>
+    <button id="closeBtn" class="close-btn" aria-label="Close player">✕</button>
+    <div class="player-info">
+      <img id="nowPlayingLogo" alt="">
       <div class="info-text">
         <span class="info-name" id="nowPlayingName"></span>
-        <span class="info-group"><span class="live-dot">● LIVE</span> <span id="nowPlayingGroup"></span></span>
+        <span class="info-group" id="nowPlayingGroup"></span>
       </div>
-      <button id="closeBtn" class="close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="player-status" id="playerStatus">
+      <div class="spinner"></div>
+      <div class="msg" id="playerMsg"></div>
+      <button class="retry-btn" id="retryBtn">Try again</button>
     </div>
   </div>
 
-  <!-- HLS.js for .m3u8 streams -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-  <!-- dash.js for .mpd streams with DRM -->
-  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
-  <!-- Shaka Player as a robust fallback for DASH/DRM -->
-  <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
-
   <script>
+  (function () {
+    'use strict';
+
+    /* ================= Settings ================= */
     const PLAYLIST_URL = 'https://lktv.miinbandara.workers.dev/playlist.m3u?key=mykey1';
 
     const LOGO_SOURCES = [
       'https://live.fanmingming.cn/tv/',
       'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/international/',
-      'https://raw.githubusercontent.com/Fourqui/tv/master/countries/international/',
+      'https://raw.githubusercontent.com/Fourqui/tv/master/countries/international/'
     ];
 
-    const channelsEl  = document.getElementById('channels');
-    const statsEl     = document.getElementById('stats');
-    const searchInput = document.getElementById('searchInput');
-    const searchBoxWrap = document.getElementById('searchBoxWrap');
-    const playerWrap  = document.getElementById('playerWrap');
-    const video       = document.getElementById('player');
-    const closeBtn    = document.getElementById('closeBtn');
-    const nowPlayingLogo  = document.getElementById('nowPlayingLogo');
-    const nowPlayingName  = document.getElementById('nowPlayingName');
-    const nowPlayingGroup = document.getElementById('nowPlayingGroup');
+    const HLS_JS_URL   = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
+    const SHAKA_JS_URL = 'https://cdn.jsdelivr.net/npm/shaka-player@4.7.11/dist/shaka-player.compiled.js';
 
+    const MAX_NETWORK_RETRIES = 8;   // stream reconnect attempts before showing an error
+    const MAX_MEDIA_RETRIES   = 3;
+
+    /* ================= Elements ================= */
+    const $ = (id) => document.getElementById(id);
+    const channelsEl      = $('channels');
+    const statsEl         = $('stats');
+    const searchInput     = $('searchInput');
+    const searchBoxWrap   = $('searchBoxWrap');
+    const playerWrap      = $('playerWrap');
+    const video           = $('player');
+    const closeBtn        = $('closeBtn');
+    const nowPlayingLogo  = $('nowPlayingLogo');
+    const nowPlayingName  = $('nowPlayingName');
+    const nowPlayingGroup = $('nowPlayingGroup');
+    const statusEl        = $('playerStatus');
+    const statusMsg       = $('playerMsg');
+    const retryBtn        = $('retryBtn');
+
+    /* ================= State ================= */
     let allChannels = [];
     let hls = null;
-    let dashPlayer = null;
     let shakaPlayer = null;
-    let session = 0;          // increments per channel; stale callbacks are ignored
-    let stallTimer = null;
+    let currentChannel = null;
+    let playToken = 0;          // changes every time a new channel starts, so old async work can stop itself
+    let enteredFullscreen = false;
+    let uiTimer = null;
 
-    /* ---------- Tab switching ---------- */
+    /* ================= Helpers ================= */
+    function loadedScripts() { return (loadedScripts.cache = loadedScripts.cache || {}); }
+    function loadScript(src) {
+      const cache = loadedScripts();
+      if (cache[src]) return cache[src];
+      cache[src] = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = () => { delete cache[src]; reject(new Error('Could not load a required video library.')); };
+        document.head.appendChild(s);
+      });
+      return cache[src];
+    }
+
+    function cleanName(channel) {
+      return (channel.tvgName || channel.name || '')
+        .replace(/\s+/g, '')
+        .replace(/[^\p{L}\p{N}_-]/gu, '')
+        .trim();
+    }
+
+    function upgradeHttps(url) {
+      return (location.protocol === 'https:' && url.startsWith('http://'))
+        ? 'https://' + url.slice(7) : url;
+    }
+
+    // List of logo addresses to try, in order
+    function logoCandidates(channel) {
+      const list = [];
+      if (channel.logo && /^https?:\/\//i.test(channel.logo)) list.push(upgradeHttps(channel.logo));
+      const name = cleanName(channel);
+      if (name) LOGO_SOURCES.forEach(base => list.push(base + encodeURIComponent(name) + '.png'));
+      return list;
+    }
+
+    /* ================= Tabs ================= */
     const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabContents = {
-      channels: document.getElementById('tab-channels'),
-      cricket: document.getElementById('tab-cricket')
-    };
+    const tabContents = { channels: $('tab-channels'), cricket: $('tab-cricket') };
 
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
-
-        tabButtons.forEach(b => b.classList.toggle('active', b === btn));
+        tabButtons.forEach(b => {
+          const on = b === btn;
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-selected', String(on));
+        });
         Object.values(tabContents).forEach(c => c.classList.remove('active'));
         tabContents[target].classList.add('active');
-
-        // Hide the channel search bar when not on the channels tab
         searchBoxWrap.style.display = (target === 'channels') ? '' : 'none';
       });
     });
 
-    /* ---------- Load & parse playlist ---------- */
+    /* ================= Playlist ================= */
     async function loadPlaylist() {
+      statsEl.textContent = 'Loading channels...';
+      channelsEl.innerHTML = '';
       try {
-        const res = await fetch(PLAYLIST_URL);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 20000);
+        const res = await fetch(PLAYLIST_URL, { signal: controller.signal, cache: 'no-cache' });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('Server replied with status ' + res.status);
         const text = await res.text();
+        if (!text.includes('#EXTM3U') && !text.includes('#EXTINF')) {
+          throw new Error('The playlist is not in the expected format.');
+        }
         allChannels = parseM3U(text);
         renderChannels(allChannels);
-        statsEl.textContent = `${allChannels.length} channels loaded`;
+        applySearch();
       } catch (e) {
-        channelsEl.innerHTML = `
-          <div class="empty-state">
-            <div class="icon">⚠️</div>
-            <p>Failed to load playlist: ${e.message}</p>
-            <p style="margin-top:8px;font-size:13px;">Check CORS or use a proxy worker.</p>
-          </div>`;
-        statsEl.textContent = 'Error loading playlist';
+        const msg = e.name === 'AbortError' ? 'The playlist took too long to load.' : e.message;
+        showPlaylistError(msg);
+        statsEl.textContent = 'Could not load channels';
       }
+    }
+
+    function showPlaylistError(message) {
+      channelsEl.innerHTML = '';
+      const box = document.createElement('div');
+      box.className = 'empty-state';
+      const icon = document.createElement('div'); icon.className = 'icon'; icon.textContent = '⚠️';
+      const p1 = document.createElement('p'); p1.textContent = 'Failed to load playlist: ' + message;
+      const p2 = document.createElement('p');
+      p2.style.cssText = 'margin-top:8px;font-size:13px;';
+      p2.textContent = 'Check your internet connection and that the proxy worker is online.';
+      const btn = document.createElement('button');
+      btn.className = 'retry-btn'; btn.textContent = 'Try again';
+      btn.addEventListener('click', loadPlaylist);
+      box.append(icon, p1, p2, btn);
+      channelsEl.appendChild(box);
     }
 
     function parseM3U(text) {
       const lines = text.split(/\r?\n/);
       const channels = [];
       let current = null;
+      let pending = {};   // KODIPROP / EXTVLCOPT lines that belong to the next channel
 
-      for (let line of lines) {
-        line = line.trim();
+      for (let raw of lines) {
+        const line = raw.trim();
         if (!line) continue;
 
         if (line.startsWith('#EXTINF:')) {
-          const nameMatch   = line.match(/,(.*)$/);
-          const logoMatch   = line.match(/tvg-logo="([^"]*)"/);
-          const groupMatch  = line.match(/group-title="([^"]*)"/);
+          const nameMatch    = line.match(/,([^,]*)$/);
+          const logoMatch    = line.match(/tvg-logo="([^"]*)"/);
+          const groupMatch   = line.match(/group-title="([^"]*)"/);
           const tvgNameMatch = line.match(/tvg-name="([^"]*)"/);
-
           current = {
-            name:  nameMatch  ? nameMatch[1].trim()  : 'Unknown',
-            logo:  logoMatch  ? logoMatch[1]         : '',
-            group: groupMatch ? groupMatch[1]        : '',
-            tvgName: tvgNameMatch ? tvgNameMatch[1]  : ''
+            name:    nameMatch ? nameMatch[1].trim() : '',
+            logo:    logoMatch ? logoMatch[1] : '',
+            group:   groupMatch ? groupMatch[1] : '',
+            tvgName: tvgNameMatch ? tvgNameMatch[1] : ''
           };
-        } else if (!line.startsWith('#')) {
-          if (current) {
-            current.url = line;
-            channels.push(current);
-            current = null;
+          if (!current.name) current.name = current.tvgName || 'Unknown';
+        } else if (line.startsWith('#KODIPROP:')) {
+          const kv = line.slice(10);
+          const i = kv.indexOf('=');
+          if (i > 0) pending[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
+        } else if (line.startsWith('#')) {
+          continue;
+        } else if (current) {
+          current.url = line;
+          if (pending['inputstream.adaptive.license_type'] &&
+              /clearkey/i.test(pending['inputstream.adaptive.license_type']) &&
+              pending['inputstream.adaptive.license_key']) {
+            current.kodiLicense = pending['inputstream.adaptive.license_key'];
           }
+          channels.push(current);
+          current = null;
+          pending = {};
         }
       }
       return channels;
     }
 
-    /* ---------- Logo resolution ---------- */
-    function getLogoUrl(channel) {
-      if (channel.logo && channel.logo.startsWith('http')) return channel.logo;
+    /* ================= Render ================= */
+    function makeCard(ch) {
+      const card = document.createElement('div');
+      card.className = 'channel';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', 'Play ' + ch.name);
+      card.dataset.name  = ch.name.toLowerCase();
+      card.dataset.group = (ch.group || '').toLowerCase();
 
-      const name = (channel.tvgName || channel.name || '')
-        .replace(/\s+/g, '')
-        .replace(/[^\w\u4e00-\u9fa5-]/g, '')
-        .trim();
+      const initial = (ch.name || '?').charAt(0).toUpperCase();
 
-      if (!name) return '';
-      return LOGO_SOURCES[0] + name + '.png';
-    }
+      const fallback = document.createElement('div');
+      fallback.className = 'fallback-logo';
+      fallback.textContent = initial;
 
-    function setupLogoFallback(imgEl, channel) {
-      let attempt = 0;
-      imgEl.onerror = function () {
-        attempt++;
-        if (attempt < LOGO_SOURCES.length) {
-          const name = (channel.tvgName || channel.name || '')
-            .replace(/\s+/g, '')
-            .replace(/[^\w\u4e00-\u9fa5-]/g, '')
-            .trim();
-          if (name) {
-            imgEl.src = LOGO_SOURCES[attempt] + name + '.png';
-            return;
-          }
-        }
-        imgEl.style.display = 'none';
-        const fallback = imgEl.nextElementSibling;
-        if (fallback && fallback.classList.contains('fallback-logo')) {
+      const candidates = logoCandidates(ch);
+      if (candidates.length) {
+        const img = document.createElement('img');
+        img.alt = '';
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer';
+        fallback.style.display = 'none';
+        let attempt = 0;
+        img.onerror = () => {
+          attempt++;
+          if (attempt < candidates.length) { img.src = candidates[attempt]; return; }
+          img.remove();
           fallback.style.display = 'flex';
-        }
-      };
-    }
+        };
+        img.src = candidates[0];
+        card.appendChild(img);
+      }
+      card.appendChild(fallback);
 
-    /* ---------- Render channels ---------- */
-    function renderChannels(channels) {
-      if (!channels.length) {
-        channelsEl.innerHTML = `
-          <div class="empty-state">
-            <div class="icon">📭</div>
-            <p>No channels found.</p>
-          </div>`;
-        return;
+      const nameEl = document.createElement('div');
+      nameEl.className = 'ch-name';
+      nameEl.textContent = ch.name;
+      card.appendChild(nameEl);
+
+      if (ch.group) {
+        const tag = document.createElement('div');
+        tag.className = 'group-tag';
+        tag.textContent = ch.group;
+        card.appendChild(tag);
       }
 
-      channelsEl.innerHTML = '';
-      const fragment = document.createDocumentFragment();
-
-      channels.forEach((ch, idx) => {
-        const card = document.createElement('div');
-        card.className = 'channel';
-        card.dataset.name  = ch.name.toLowerCase();
-        card.dataset.group = (ch.group || '').toLowerCase();
-
-        const logoUrl = getLogoUrl(ch);
-        const initial = (ch.name || '?').charAt(0).toUpperCase();
-
-        let logoHtml = '';
-        if (logoUrl) {
-          logoHtml = `<img src="${logoUrl}" alt="${ch.name}" loading="lazy" onerror="">`;
-        } else {
-          logoHtml = `<div class="fallback-logo">${initial}</div>`;
-        }
-        logoHtml += `<div class="fallback-logo" style="display:none;">${initial}</div>`;
-
-        card.innerHTML = `
-          ${logoHtml}
-          <div class="ch-name">${ch.name}</div>
-          ${ch.group ? `<div class="group-tag">${ch.group}</div>` : ''}
-        `;
-
-        const imgEl = card.querySelector('img');
-        if (imgEl) setupLogoFallback(imgEl, ch);
-
-        card.onclick = () => playChannel(ch);
-        fragment.appendChild(card);
+      card.addEventListener('click', () => playChannel(ch));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playChannel(ch); }
       });
-
-      channelsEl.appendChild(fragment);
+      return card;
     }
 
-    /* ---------- Search ---------- */
-    searchInput.addEventListener('input', () => {
+    function renderChannels(channels) {
+      channelsEl.innerHTML = '';
+      if (!channels.length) {
+        const box = document.createElement('div');
+        box.className = 'empty-state';
+        box.innerHTML = '<div class="icon">📭</div><p>No channels found.</p>';
+        channelsEl.appendChild(box);
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      channels.forEach(ch => frag.appendChild(makeCard(ch)));
+      channelsEl.appendChild(frag);
+    }
+
+    /* ================= Search ================= */
+    function applySearch() {
       const q = searchInput.value.trim().toLowerCase();
-      const cards = channelsEl.querySelectorAll('.channel');
       let visible = 0;
-      cards.forEach(card => {
-        const match = card.dataset.name.includes(q) || card.dataset.group.includes(q);
+      channelsEl.querySelectorAll('.channel').forEach(card => {
+        const match = !q || card.dataset.name.includes(q) || card.dataset.group.includes(q);
         card.style.display = match ? '' : 'none';
         if (match) visible++;
       });
+      if (!allChannels.length) return;
       statsEl.textContent = q
-        ? `${visible} of ${allChannels.length} channels match "${q}"`
-        : `${allChannels.length} channels loaded`;
+        ? visible + ' of ' + allChannels.length + ' channels match "' + q + '"'
+        : allChannels.length + ' channels loaded';
+    }
+
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applySearch, 120);
     });
 
-    /* ---------- Cleanup players before starting a new one ---------- */
+    /* ================= Player status box ================= */
+    function showStatus(message, isError) {
+      statusMsg.textContent = message;
+      statusEl.classList.add('visible');
+      statusEl.classList.toggle('error', !!isError);
+    }
+    function hideStatus() { statusEl.classList.remove('visible', 'error'); }
+
+    retryBtn.addEventListener('click', () => { if (currentChannel) playChannel(currentChannel); });
+
+    // Overlays appear when the mouse or finger moves, then fade
+    function pokeUI() {
+      playerWrap.classList.add('show-ui');
+      clearTimeout(uiTimer);
+      uiTimer = setTimeout(() => playerWrap.classList.remove('show-ui'), 3000);
+    }
+    ['mousemove', 'touchstart', 'keydown'].forEach(ev =>
+      playerWrap.addEventListener(ev, pokeUI, { passive: true }));
+
+    /* ================= Cleanup ================= */
     function destroyPlayers() {
-      session++;
-      clearInterval(stallTimer); stallTimer = null;
-      if (hls) { hls.destroy(); hls = null; }
-      if (dashPlayer) { dashPlayer.reset(); dashPlayer = null; }
-      if (shakaPlayer) { shakaPlayer.destroy(); shakaPlayer = null; }
-      video.pause();
+      playToken++;                                   // cancels any older async setup
+      if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
+      if (shakaPlayer) { try { shakaPlayer.destroy(); } catch (e) {} shakaPlayer = null; }
+      video.onloadedmetadata = null;
+      video.onerror = null;
+      try { video.pause(); } catch (e) {}
       video.removeAttribute('src');
       video.load();
     }
 
-    /* ---------- Parse DRM parameters from M3U URL ---------- */
-    function parseDrmParams(url) {
-      const result = { manifestUrl: url, drmScheme: null, clearKeys: null };
+    /* ================= Stream address parsing ================= */
+    function hexToText(hex) { return hex.trim().toLowerCase(); }
 
-      if (!url.includes('|')) return result;
+    // Supports "url|drmScheme=clearkey&drmLicense=KID:KEY" and #KODIPROP license keys
+    function parseStream(ch) {
+      const result = { manifestUrl: ch.url, clearKeys: null };
+      let url = ch.url;
 
-      const parts = url.split('|');
-      result.manifestUrl = parts[0];
-
-      const queryString = parts.slice(1).join('|');
-      const params = new URLSearchParams(queryString);
-
-      const drmScheme = params.get('drmScheme');
-      const drmLicense = params.get('drmLicense');
-
-      if (drmScheme === 'clearkey' && drmLicense) {
-        const [kid, key] = drmLicense.split(':');
-        if (kid && key) {
-          result.drmScheme = 'clearkey';
-          result.clearKeys = { [kid.trim()]: key.trim() };
+      if (url.includes('|')) {
+        const parts = url.split('|');
+        url = parts[0];
+        const params = new URLSearchParams(parts.slice(1).join('|'));
+        const scheme  = params.get('drmScheme');
+        const license = params.get('drmLicense');
+        if (scheme === 'clearkey' && license) {
+          const [kid, key] = license.split(':');
+          if (kid && key) result.clearKeys = { [hexToText(kid)]: hexToText(key) };
         }
       }
+      if (!result.clearKeys && ch.kodiLicense && ch.kodiLicense.includes(':')) {
+        const [kid, key] = ch.kodiLicense.split(':');
+        if (kid && key && /^[0-9a-f]+$/i.test(kid.trim()) && /^[0-9a-f]+$/i.test(key.trim())) {
+          result.clearKeys = { [hexToText(kid)]: hexToText(key) };
+        }
+      }
+      result.manifestUrl = url.trim();
       return result;
     }
 
-    /* ---------- Play channel ---------- */
-    function playChannel(ch) {
-      destroyPlayers();
+    /* ================= Play ================= */
+    function requestFs(el) {
+      const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if (!fn) return;
+      try {
+        const p = fn.call(el);
+        if (p && p.then) p.then(() => { enteredFullscreen = true; }).catch(() => {});
+        else enteredFullscreen = true;
+      } catch (e) {}
+    }
 
-      const logoUrl = getLogoUrl(ch);
-      nowPlayingLogo.src = logoUrl || '';
-      nowPlayingLogo.style.display = logoUrl ? 'block' : 'none';
+    function startVideo() {
+      const p = video.play();
+      if (p && p.catch) {
+        p.catch(err => {
+          // Browsers can block sound-on autoplay. Start muted instead, the viewer can unmute.
+          if (err && err.name === 'NotAllowedError') {
+            video.muted = true;
+            video.play().catch(() => {});
+          }
+        });
+      }
+    }
+
+    function playChannel(ch) {
+      if (!ch || !ch.url) return;
+      destroyPlayers();
+      const token = playToken;
+      currentChannel = ch;
+
+      // Header info
+      const logos = logoCandidates(ch);
+      let li = 0;
+      nowPlayingLogo.onerror = () => {
+        li++;
+        if (li < logos.length) nowPlayingLogo.src = logos[li];
+        else nowPlayingLogo.style.display = 'none';
+      };
+      nowPlayingLogo.referrerPolicy = 'no-referrer';
+      if (logos.length) { nowPlayingLogo.style.display = ''; nowPlayingLogo.src = logos[0]; }
+      else { nowPlayingLogo.removeAttribute('src'); nowPlayingLogo.style.display = 'none'; }
       nowPlayingName.textContent  = ch.name;
       nowPlayingGroup.textContent = ch.group || '';
 
-      playerWrap.classList.add('active', 'loading');
-      showUI();
+      playerWrap.classList.add('active');
+      document.body.classList.add('no-scroll');
+      pokeUI();
+      showStatus('Loading ' + ch.name + '…', false);
+      video.muted = false;
 
-      const mySession = session;
-      let started = false;
-      const startPlay = () => {
-        if (started || mySession !== session) return;   // fullscreen/play only once per channel
-        started = true;
-        video.play().catch(e => console.log('Play error:', e));
-        requestFullscreen(playerWrap);
-      };
+      // Must run straight from the click so the browser allows it
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) requestFs(playerWrap);
 
-      const url = ch.url;
-      const parsed = parseDrmParams(url);
+      const stream = parseStream(ch);
+      const url = stream.manifestUrl;
 
-      if (parsed.manifestUrl.includes('.mpd')) {
-        if (parsed.drmScheme === 'clearkey' && parsed.clearKeys) {
-          try {
-            dashPlayer = dashjs.MediaPlayer().create();
-            dashPlayer.initialize(video, parsed.manifestUrl, false);
+      if (location.protocol === 'https:' && /^http:\/\//i.test(url)) {
+        showStatus('This channel uses an insecure (http) link, so the browser blocks it on this secure page.', true);
+        return;
+      }
 
-            const protData = {
-              "org.w3.clearkey": {
-                "clearkeys": parsed.clearKeys
+      const isDash = /\.mpd(\?|$|#)/i.test(url);
+
+      const onPlaying = () => { if (token === playToken) hideStatus(); };
+      video.onplaying = onPlaying;
+      video.onwaiting = () => { if (token === playToken && !video.paused) showStatus('Buffering…', false); };
+      video.oncanplay = onPlaying;
+
+      if (isDash) {
+        playDash(url, stream.clearKeys, token);
+      } else {
+        playHls(url, token);
+      }
+    }
+
+    /* ---------- HLS (.m3u8) ---------- */
+    function playHls(url, token) {
+      loadScript(HLS_JS_URL).then(() => {
+        if (token !== playToken) return;
+
+        if (window.Hls && Hls.isSupported()) {
+          let netRetries = 0;
+          let mediaRetries = 0;
+
+          hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+            // Be patient with the proxy: retry slow or failed requests
+            manifestLoadingMaxRetry: 6,
+            manifestLoadingRetryDelay: 800,
+            manifestLoadingMaxRetryTimeout: 8000,
+            levelLoadingMaxRetry: 6,
+            levelLoadingRetryDelay: 800,
+            levelLoadingMaxRetryTimeout: 8000,
+            fragLoadingMaxRetry: 8,
+            fragLoadingRetryDelay: 600,
+            fragLoadingMaxRetryTimeout: 8000,
+            manifestLoadingTimeOut: 15000,
+            levelLoadingTimeOut: 15000,
+            fragLoadingTimeOut: 25000,
+            maxBufferLength: 20,
+            backBufferLength: 30
+          });
+
+          const h = hls;
+          h.on(Hls.Events.MANIFEST_PARSED, () => { if (token === playToken) startVideo(); });
+          // A successful piece means the stream is healthy again, so reset counters
+          h.on(Hls.Events.FRAG_LOADED, () => { netRetries = 0; mediaRetries = 0; });
+
+          h.on(Hls.Events.ERROR, (event, data) => {
+            if (token !== playToken || !data) return;
+            if (!data.fatal) return;   // hls.js already retries small problems by itself
+
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              if (netRetries < MAX_NETWORK_RETRIES) {
+                netRetries++;
+                showStatus('Connection problem. Reconnecting (' + netRetries + '/' + MAX_NETWORK_RETRIES + ')…', false);
+                setTimeout(() => { if (token === playToken && hls === h) h.startLoad(); }, Math.min(1000 * netRetries, 5000));
+              } else {
+                showStatus('Could not load this channel. The stream may be offline or blocking this site.', true);
+                h.destroy(); if (hls === h) hls = null;
               }
-            };
-            dashPlayer.setProtectionData(protData);
-            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
-            dashPlayer.on(dashjs.MediaPlayer.events.ERROR, (e) => {
-              console.error('dash.js error:', e);
-              playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
-            });
-          } catch (e) {
-            console.error('dash.js init failed, trying Shaka:', e);
-            playWithShaka(parsed.manifestUrl, parsed.clearKeys, startPlay);
-          }
-        } else {
-          try {
-            dashPlayer = dashjs.MediaPlayer().create();
-            dashPlayer.initialize(video, parsed.manifestUrl, false);
-            dashPlayer.on(dashjs.MediaPlayer.events.CAN_PLAY, startPlay);
-          } catch (e) {
-            console.error('DASH playback failed:', e);
-          }
-        }
-        return;
-      }
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              if (mediaRetries < MAX_MEDIA_RETRIES) {
+                mediaRetries++;
+                if (mediaRetries === 2) h.swapAudioCodec();
+                h.recoverMediaError();
+              } else {
+                showStatus('This stream could not be played in your browser.', true);
+                h.destroy(); if (hls === h) hls = null;
+              }
+            } else {
+              showStatus('Playback failed. Try again.', true);
+              h.destroy(); if (hls === h) hls = null;
+            }
+          });
 
-      if (parsed.manifestUrl.includes('.m3u8') && window.Hls && Hls.isSupported()) {
-        playHls(parsed.manifestUrl, startPlay, mySession);
-        return;
-      }
-
-      video.src = parsed.manifestUrl;
-      video.addEventListener('loadedmetadata', startPlay, { once: true });
-      video.load();
-    }
-
-    /* ---------- HLS with live tuning + auto recovery ---------- */
-    function playHls(url, startPlay, mySession) {
-      let netRetries = 0, mediaRetries = 0, fullReloads = 0;
-
-      const create = () => {
-        if (hls) { hls.destroy(); hls = null; }
-        hls = new Hls({
-          lowLatencyMode: false,
-          liveSyncDurationCount: 4,          // sit 4 segments behind live edge (safer buffer)
-          liveMaxLatencyDurationCount: 12,   // only jump forward if >12 segments behind
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-          backBufferLength: 20,              // free old data so memory never bloats
-          maxBufferHole: 0.6,
-          nudgeMaxRetry: 10,
-          manifestLoadingMaxRetry: 6,
-          levelLoadingMaxRetry: 6,
-          fragLoadingMaxRetry: 6,
-          manifestLoadingRetryDelay: 1000,
-          levelLoadingRetryDelay: 1000,
-          fragLoadingRetryDelay: 1000,
-          fragLoadingMaxRetryTimeout: 8000
-        });
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, startPlay);
-
-        // a successful fragment = stream is healthy, reset retry counters
-        hls.on(Hls.Events.FRAG_BUFFERED, () => { netRetries = 0; mediaRetries = 0; fullReloads = 0; });
-
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          if (mySession !== session) return;
-          if (!data.fatal) return;                       // hls.js handles non-fatal itself
-          console.warn('HLS fatal:', data.type, data.details);
-
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && netRetries < 5) {
-            netRetries++;
-            setTimeout(() => { if (hls && mySession === session) hls.startLoad(); }, 1000 * netRetries);
-          } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRetries < 3) {
-            mediaRetries++;
-            if (mediaRetries === 2) hls.swapAudioCodec();
-            hls.recoverMediaError();
-          } else if (fullReloads < 5) {
-            fullReloads++;                               // rebuild the player from scratch
-            netRetries = mediaRetries = 0;
-            setTimeout(() => { if (mySession === session) create(); }, 1500);
-          } else {
-            console.error('HLS gave up');
-          }
-        });
-      };
-      create();
-      startStallWatchdog(mySession, () => create());
-    }
-
-    /* ---------- Stall watchdog: fixes "stuck loading" on live streams ---------- */
-    function startStallWatchdog(mySession, rebuild) {
-      clearInterval(stallTimer);
-      let lastTime = -1, stuckFor = 0;
-      stallTimer = setInterval(() => {
-        if (mySession !== session) return;
-        if (video.paused || video.ended) { stuckFor = 0; return; }
-        if (Math.abs(video.currentTime - lastTime) < 0.05) {
-          stuckFor += 2;
-          if (stuckFor === 6 && hls && hls.liveSyncPosition) {
-            video.currentTime = hls.liveSyncPosition;    // 1st try: jump to live edge
-          } else if (stuckFor === 10 && hls) {
-            hls.recoverMediaError();                     // 2nd try: reset decoder
-          } else if (stuckFor >= 16) {
-            stuckFor = 0;                                // 3rd try: rebuild everything
-            rebuild();
-          }
-        } else {
-          stuckFor = 0;
-        }
-        lastTime = video.currentTime;
-      }, 2000);
-    }
-
-    /* ---------- Shaka Player fallback ---------- */
-    async function playWithShaka(manifestUrl, clearKeys, onReady) {
-      try {
-        shaka.polyfill.installAll();
-        if (!shaka.Player.isBrowserSupported()) {
-          console.warn('Shaka Player not supported in this browser');
+          h.loadSource(url);
+          h.attachMedia(video);
           return;
         }
-        shakaPlayer = new shaka.Player(video);
-        shakaPlayer.configure({
-          drm: { clearKeys: clearKeys }
-        });
-        shakaPlayer.addEventListener('error', (event) => {
+
+        // Safari / iPhone play HLS natively
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.onerror = () => { if (token === playToken) showStatus('Could not load this channel.', true); };
+          video.src = url;
+          video.load();
+          startVideo();
+          return;
+        }
+
+        showStatus('Your browser cannot play this kind of stream.', true);
+      }).catch(err => {
+        if (token !== playToken) return;
+        // Library failed to load: last resort is the browser's own player
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url; video.load(); startVideo();
+        } else {
+          showStatus(err.message + ' Check your internet and try again.', true);
+        }
+      });
+    }
+
+    /* ---------- DASH (.mpd) with optional ClearKey ---------- */
+    async function playDash(url, clearKeys, token) {
+      try {
+        await loadScript(SHAKA_JS_URL);
+        if (token !== playToken) return;
+
+        shaka.polyfill.installAll();
+        if (!shaka.Player.isBrowserSupported()) {
+          showStatus('Your browser cannot play this kind of stream.', true);
+          return;
+        }
+
+        const player = new shaka.Player();
+        shakaPlayer = player;
+        await player.attach(video);
+        if (token !== playToken) { player.destroy(); return; }
+
+        const config = {
+          streaming: {
+            retryParameters: { maxAttempts: 5, baseDelay: 800, backoffFactor: 2, fuzzFactor: 0.5, timeout: 20000 }
+          }
+        };
+        if (clearKeys) config.drm = { clearKeys: clearKeys };
+        player.configure(config);
+
+        player.addEventListener('error', (event) => {
+          if (token !== playToken) return;
           console.error('Shaka error:', event.detail);
+          showStatus('Playback failed. The stream may be offline or protected.', true);
         });
-        await shakaPlayer.load(manifestUrl);
-        onReady();
+
+        await player.load(url);
+        if (token !== playToken) return;
+        startVideo();
       } catch (e) {
-        console.error('Shaka playback failed:', e);
+        if (token !== playToken) return;
+        console.error('DASH playback failed:', e);
+        showStatus('Could not load this channel. The stream may be offline or protected.', true);
       }
     }
 
-    function requestFullscreen(el) {
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-      else if (el.msRequestFullscreen) el.msRequestFullscreen();
-    }
-
-    /* ---------- Close player ---------- */
+    /* ================= Close ================= */
     function closePlayer() {
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      playerWrap.classList.remove('active', 'loading', 'show-ui');
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fsEl) {
+        try {
+          const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          if (p && p.catch) p.catch(() => {});
+        } catch (e) {}
+      }
+      enteredFullscreen = false;
+      playerWrap.classList.remove('active', 'show-ui');
+      document.body.classList.remove('no-scroll');
+      hideStatus();
       destroyPlayers();
-      playerWrap.classList.remove('loading');
+      currentChannel = null;
     }
 
-    closeBtn.onclick = closePlayer;
+    closeBtn.addEventListener('click', closePlayer);
 
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && playerWrap.classList.contains('active')) {
-        closePlayer();
-      }
-    });
+    // If the viewer leaves fullscreen (for example with Esc), close the player
+    function onFsChange() {
+      const inFs = document.fullscreenElement || document.webkitFullscreenElement;
+      if (!inFs && enteredFullscreen && playerWrap.classList.contains('active')) closePlayer();
+    }
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && playerWrap.classList.contains('active')) {
-        closePlayer();
-      }
+      if (e.key === 'Escape' && playerWrap.classList.contains('active')) closePlayer();
     });
 
-    /* ---------- Player UI: tap to show/hide, buffering spinner ---------- */
-    let uiTimer = null;
-    function showUI() {
-      playerWrap.classList.add('show-ui');
-      clearTimeout(uiTimer);
-      uiTimer = setTimeout(() => playerWrap.classList.remove('show-ui'), 3500);
-    }
-    ['mousemove', 'touchstart', 'click', 'keydown'].forEach(ev =>
-      playerWrap.addEventListener(ev, showUI, { passive: true }));
-    ['waiting', 'stalled', 'seeking', 'loadstart'].forEach(ev =>
-      video.addEventListener(ev, () => playerWrap.classList.add('loading')));
-    ['playing', 'canplay', 'seeked'].forEach(ev =>
-      video.addEventListener(ev, () => playerWrap.classList.remove('loading')));
+    // Pause the work when the page is hidden for a long time is left to the browser; just clean up on leave
+    window.addEventListener('pagehide', destroyPlayers);
 
-    /* ---------- Init ---------- */
+    /* ================= Start ================= */
     loadPlaylist();
+    // Warm up the video library while the viewer browses
+    (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(() => { loadScript(HLS_JS_URL).catch(() => {}); });
+  })();
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
